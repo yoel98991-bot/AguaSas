@@ -215,6 +215,20 @@
             transition: opacity 0.5s;
         }
         .delivered-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        /* Estilo animado para la ruta del cliente y un marcador más bonito para el camión */
+        .ruta-animada { stroke-dasharray: 10; animation: dash 10s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: -100; } }
+        
+        .truck-marker {
+            background: var(--primary-blue);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -308,7 +322,6 @@
                         </div>
                         
                         <div class="driver-info" id="driver-info" style="display: none;">
-                            <!-- La imagen se insertará dinámicamente con JavaScript -->
                             <div id="driver-photo" class="driver-photo"></div>
                             <div>
                                 <h4 style="margin-bottom: 4px;" id="driver-name">Tu pedido está en ruta</h4>
@@ -329,12 +342,7 @@
     <script>
         const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
-        const headers = {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            "Content-Type": "application/json"
-        };
-
+        const headers = { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json" };
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let clienteActual = null;
@@ -350,12 +358,14 @@
         let marcadorRepartidor = null;
         let activeChannels = [];
         let previousActiveOrderId = null;
+        let intervaloRastreoChofer = null; // Variable crucial para el rastreo en vivo
 
         lucide.createIcons();
 
         function unsubscribeAll() {
             activeChannels.forEach(ch => supabaseClient.removeChannel(ch));
             activeChannels = [];
+            if (intervaloRastreoChofer) clearInterval(intervaloRastreoChofer);
         }
 
         function checkSession() {
@@ -397,9 +407,7 @@
                             document.getElementById('direccion-text').textContent = direccionLegible;
                         }
                     },
-                    (err) => {
-                        alert("Necesitamos tu ubicación. Activa el GPS.");
-                    }
+                    (err) => { alert("Necesitamos tu ubicación. Activa el GPS."); }
                 );
             }
         }
@@ -409,15 +417,8 @@
             const clientes = await res.json();
             if (clientes.length > 0) return clientes[0];
             const nuevo = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
-                method: 'POST',
-                headers: { ...headers, 'Prefer': 'return=representation' },
-                body: JSON.stringify({
-                    nombre: nombre,
-                    telefono: telefono,
-                    direccion: direccionLegible,
-                    lat: ubicacionActual.lat,
-                    lng: ubicacionActual.lng
-                })
+                method: 'POST', headers: { ...headers, 'Prefer': 'return=representation' },
+                body: JSON.stringify({ nombre: nombre, telefono: telefono, direccion: direccionLegible, lat: ubicacionActual.lat, lng: ubicacionActual.lng })
             });
             return (await nuevo.json())[0];
         }
@@ -430,23 +431,16 @@
             if (!ubicacionActual) return alert("Esperá la ubicación...");
             
             const btn = document.getElementById('btn-confirmar-ubicacion');
-            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader"></i> Procesando...`;
-            lucide.createIcons();
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader"></i> Procesando...`; lucide.createIcons();
 
             try {
                 clienteActual = await encontrarOCrearCliente(nombre, telefono);
-                localStorage.setItem('waterApp_session', JSON.stringify({
-                    clienteActual, ubicacionActual, direccionLegible
-                }));
+                localStorage.setItem('waterApp_session', JSON.stringify({ clienteActual, ubicacionActual, direccionLegible }));
                 document.getElementById('setup-section').classList.remove('active');
                 document.getElementById('app-section').classList.add('active');
-                await cargarProductos();
-                cargarHistorial();
-            } catch (e) {
-                alert("Error conectando al servidor.");
-            }
-            btn.disabled = false; btn.innerHTML = `Continuar <i data-lucide="arrow-right" style="width: 18px;"></i>`;
-            lucide.createIcons();
+                await cargarProductos(); cargarHistorial();
+            } catch (e) { alert("Error conectando al servidor."); }
+            btn.disabled = false; btn.innerHTML = `Continuar <i data-lucide="arrow-right" style="width: 18px;"></i>`; lucide.createIcons();
         });
 
         async function cargarProductos() {
@@ -506,7 +500,6 @@
                 if (litrosADescontar > 0 && litrosADescontar > stockActualLitros) {
                     btn.disabled = false; return alert('Stock insuficiente.');
                 }
-
                 const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
                     method: 'POST', headers: { ...headers, 'Prefer': 'return=representation' },
                     body: JSON.stringify({ cliente_id: clienteActual.id, producto_id: productoSeleccionado.id, lat: ubicacionActual.lat, lng: ubicacionActual.lng, monto: montoTotal, estado: 'pendiente' })
@@ -519,14 +512,11 @@
                         const [stock] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=id,litros_disponibles&limit=1`, { headers }).then(r => r.json());
                         await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stock.id}`, { method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' }, body: JSON.stringify({ litros_disponibles: stock.litros_disponibles - litrosADescontar }) });
                     }
-                    alert("¡Pedido realizado!");
                     document.getElementById('order-summary').style.display = 'none';
                     cargarProductos(); cargarHistorial();
                     document.querySelector('[data-tab="seguimiento"]').click();
                 }
-            } catch (e) {
-                alert("Error al crear pedido.");
-            }
+            } catch (e) { alert("Error al crear pedido."); }
             btn.disabled = false;
         });
 
@@ -536,8 +526,7 @@
             const pedidos = await res.json();
             const container = document.getElementById('historial-list');
             if (pedidos.length === 0) {
-                container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--text-muted);"><p>Sin pedidos.</p></div>`;
-                return;
+                container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--text-muted);"><p>Sin pedidos.</p></div>`; return;
             }
             container.innerHTML = pedidos.map(p => {
                 const badgeClass = `badge-${p.estado}`;
@@ -547,10 +536,7 @@
                             <strong class="history-title"><i data-lucide="box" style="width: 16px;"></i> ${p.productos?.nombre || 'Producto'}</strong>
                             <span class="badge ${badgeClass}">${p.estado}</span>
                         </div>
-                        <div class="history-details">
-                            <span>${new Date(p.fecha_pedido).toLocaleDateString()}</span>
-                            <span style="font-weight: 500; color: var(--text-main);">$${p.monto.toFixed(2)}</span>
-                        </div>
+                        <div class="history-details"><span>${new Date(p.fecha_pedido).toLocaleDateString()}</span><span style="font-weight: 500; color: var(--text-main);">$${p.monto.toFixed(2)}</span></div>
                     </div>`;
             }).join('');
             lucide.createIcons();
@@ -559,7 +545,6 @@
         function animarMarcador(marker, newLatLng, duracion = 1000) {
             const inicio = marker.getLatLng();
             const inicioTiempo = performance.now();
-
             function cuadro(tiempoActual) {
                 const transcurrido = tiempoActual - inicioTiempo;
                 const progreso = Math.min(transcurrido / duracion, 1);
@@ -568,25 +553,76 @@
                 marker.setLatLng([lat, lng]);
                 if (progreso < 1) requestAnimationFrame(cuadro);
             }
-
             requestAnimationFrame(cuadro);
         }
 
         function inicializarMapa(lat, lng) {
             if (!mapaInstancia) {
                 mapaInstancia = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap'
-                }).addTo(mapaInstancia);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(mapaInstancia);
                 const clientIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
                 marcadorCliente = L.marker([lat, lng], { icon: clientIcon }).addTo(mapaInstancia);
             }
         }
 
+        // --- SISTEMA DE ENRUTAMIENTO OSRM PARA EL CLIENTE ---
+        async function trazarRutaOSRM(latRepartidor, lngRepartidor) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${lngRepartidor},${latRepartidor};${ubicacionActual.lng},${ubicacionActual.lat}?overview=full&geometries=geojson`;
+                const respuesta = await fetch(url);
+                const data = await respuesta.json();
+
+                if (data.routes && data.routes.length > 0) {
+                    const puntosRuta = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                    
+                    if (rutaLinea) mapaInstancia.removeLayer(rutaLinea);
+                    rutaLinea = L.polyline(puntosRuta, {
+                        color: '#3b82f6', weight: 5, opacity: 0.8,
+                        className: 'ruta-animada'
+                    }).addTo(mapaInstancia);
+
+                    // Ajustar mapa sutilmente
+                    mapaInstancia.fitBounds(rutaLinea.getBounds(), { padding: [30, 30], maxZoom: 16 });
+                }
+            } catch (error) {
+                // Si falla OSRM, dibuja la línea punteada recta clásica
+                if (rutaLinea) mapaInstancia.removeLayer(rutaLinea);
+                rutaLinea = L.polyline(
+                    [[latRepartidor, lngRepartidor], [ubicacionActual.lat, ubicacionActual.lng]],
+                    { color: '#3b82f6', weight: 4, dashArray: '10, 10' }
+                ).addTo(mapaInstancia);
+            }
+        }
+
+        async function actualizarPosicionEnVivo(choferId) {
+            if (!choferId) return;
+            try {
+                const ubicacionesRes = await fetch(
+                    `${SUPABASE_URL}/rest/v1/ubicaciones_repartidor?chofer_id=eq.${choferId}&order=updated_at.desc&limit=1`,
+                    { headers }
+                );
+                const ubicaciones = await ubicacionesRes.json();
+
+                if (ubicaciones.length > 0) {
+                    const { lat, lng } = ubicaciones[0];
+                    const nuevaPos = L.latLng(lat, lng);
+
+                    if (!marcadorRepartidor) {
+                        const driverIcon = L.divIcon({ html: '<div class="truck-marker">🚚</div>', className: '', iconSize: [32, 32], iconAnchor: [16, 16] });
+                        marcadorRepartidor = L.marker(nuevaPos, { icon: driverIcon }).addTo(mapaInstancia);
+                    } else {
+                        animarMarcador(marcadorRepartidor, nuevaPos, 1000);
+                    }
+                    
+                    // Actualizamos la ruta por las calles
+                    trazarRutaOSRM(lat, lng);
+                }
+            } catch(e) {}
+        }
+
         async function rastrearPedidoActivo() {
             if (!clienteActual) return;
             try {
-                // Obtenemos el pedido activo incluyendo los datos del chofer
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&estado=in.(pendiente,en_ruta)&select=id,estado,chofer_id,choferes(imagen_url,nombre)&order=fecha_pedido.desc&limit=1`, { headers });
                 const pedidosActivos = await res.json();
 
@@ -603,54 +639,29 @@
                         document.getElementById('map-overlay').classList.remove('hidden');
                         document.getElementById('driver-info').style.display = 'none';
                         if(rutaLinea) mapaInstancia.removeLayer(rutaLinea);
-                        if(marcadorRepartidor) mapaInstancia.removeLayer(marcadorRepartidor);
+                        if(marcadorRepartidor) { mapaInstancia.removeLayer(marcadorRepartidor); marcadorRepartidor = null; }
+                        if(intervaloRastreoChofer) clearInterval(intervaloRastreoChofer);
                     } 
                     else if (pedido.estado === 'en_ruta') {
                         document.getElementById('map-overlay').classList.add('hidden');
                         document.getElementById('driver-info').style.display = 'flex';
 
-                        // Mostrar foto y nombre del repartidor
                         const chofer = pedido.choferes;
                         const driverPhotoDiv = document.getElementById('driver-photo');
-                        const driverNameSpan = document.getElementById('driver-name');
                         
                         if (chofer) {
-                            driverPhotoDiv.style.backgroundImage = chofer.imagen_url 
-                                ? `url(${chofer.imagen_url})` 
-                                : "url('https://via.placeholder.com/48')";
-                            driverNameSpan.textContent = chofer.nombre || 'Repartidor';
-                        } else {
-                            driverPhotoDiv.style.backgroundImage = "url('https://via.placeholder.com/48')";
-                            driverNameSpan.textContent = 'Repartidor';
+                            driverPhotoDiv.style.backgroundImage = chofer.imagen_url ? `url(${chofer.imagen_url})` : "url('https://ui-avatars.com/api/?name=Chofer&background=27272a&color=3b82f6')";
+                            document.getElementById('driver-name').textContent = chofer.nombre || 'Repartidor';
                         }
 
-                        const ubicacionesRes = await fetch(
-                            `${SUPABASE_URL}/rest/v1/ubicaciones_repartidor?chofer_id=eq.${pedido.chofer_id || 1}&order=updated_at.desc&limit=1`,
-                            { headers }
-                        );
-                        const ubicaciones = await ubicacionesRes.json();
-
-                        if (ubicaciones.length > 0) {
-                            const { lat, lng } = ubicaciones[0];
-                            const nuevaPos = L.latLng(lat, lng);
-
-                            if (!marcadorRepartidor) {
-                                const driverIcon = L.divIcon({ html: '🚚', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
-                                marcadorRepartidor = L.marker(nuevaPos, { icon: driverIcon }).addTo(mapaInstancia);
-                            } else {
-                                animarMarcador(marcadorRepartidor, nuevaPos, 1000);
-                            }
-
-                            if (rutaLinea) mapaInstancia.removeLayer(rutaLinea);
-                            rutaLinea = L.polyline(
-                                [nuevaPos, [ubicacionActual.lat, ubicacionActual.lng]],
-                                { color: '#3b82f6', weight: 4, dashArray: '10, 10' }
-                            ).addTo(mapaInstancia);
-
-                            mapaInstancia.fitBounds(rutaLinea.getBounds(), { padding: [30, 30] });
-                        }
+                        // Llamada inmediata y luego bucle cada 5 segundos
+                        actualizarPosicionEnVivo(pedido.chofer_id);
+                        if (intervaloRastreoChofer) clearInterval(intervaloRastreoChofer);
+                        intervaloRastreoChofer = setInterval(() => actualizarPosicionEnVivo(pedido.chofer_id), 5000);
                     }
                 } else {
+                    if (intervaloRastreoChofer) clearInterval(intervaloRastreoChofer);
+                    
                     if (previousActiveOrderId) {
                         const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${previousActiveOrderId}&select=estado,fecha_entrega`, { headers });
                         const checkData = await checkRes.json();
@@ -667,7 +678,7 @@
                                 document.getElementById('delivered-overlay').classList.add('hidden');
                                 previousActiveOrderId = null;
                                 unsubscribeAll();
-                            }, 10000);
+                            }, 5000);
                             return;
                         }
                     }
@@ -675,9 +686,7 @@
                     document.getElementById('active-order-map').style.display = 'none';
                     previousActiveOrderId = null;
                 }
-            } catch(e) {
-                console.error("Error rastreando pedido:", e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         function subscribeToActiveOrder() {
@@ -685,15 +694,13 @@
             unsubscribeAll();
             const channel = supabaseClient
                 .channel('pedido-activo')
-                .on('postgres_changes', 
-                    { event: 'UPDATE', schema: 'public', table: 'pedidos', filter: `cliente_id=eq.${clienteActual.id}` },
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos', filter: `cliente_id=eq.${clienteActual.id}` },
                     (payload) => {
                         if (payload.new.estado === 'en_ruta' || payload.new.estado === 'completado') {
                             rastrearPedidoActivo();
                         }
                     }
-                )
-                .subscribe();
+                ).subscribe();
             activeChannels.push(channel);
         }
 
