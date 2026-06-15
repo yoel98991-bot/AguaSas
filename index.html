@@ -183,6 +183,15 @@
             align-items: center;
             gap: 16px;
         }
+        .driver-photo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--bg-card-highlight);
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--primary-blue);
+        }
 
         .leaflet-layer,
         .leaflet-control-zoom-in,
@@ -299,11 +308,10 @@
                         </div>
                         
                         <div class="driver-info" id="driver-info" style="display: none;">
-                            <div style="background: rgba(59,130,246,0.1); padding: 12px; border-radius: 50%; color: var(--primary-blue);">
-                                <i data-lucide="truck" style="width: 24px; height: 24px;"></i>
-                            </div>
+                            <!-- La imagen se insertará dinámicamente con JavaScript -->
+                            <div id="driver-photo" class="driver-photo"></div>
                             <div>
-                                <h4 style="margin-bottom: 4px;">Tu pedido está en ruta</h4>
+                                <h4 style="margin-bottom: 4px;" id="driver-name">Tu pedido está en ruta</h4>
                                 <p style="font-size: 0.85rem; color: var(--text-muted);">El repartidor se dirige a tu ubicación.</p>
                             </div>
                         </div>
@@ -578,7 +586,8 @@
         async function rastrearPedidoActivo() {
             if (!clienteActual) return;
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&estado=in.(pendiente,en_ruta)&select=id,estado,chofer_id&order=fecha_pedido.desc&limit=1`, { headers });
+                // Obtenemos el pedido activo incluyendo los datos del chofer
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&estado=in.(pendiente,en_ruta)&select=id,estado,chofer_id,choferes(imagen_url,nombre)&order=fecha_pedido.desc&limit=1`, { headers });
                 const pedidosActivos = await res.json();
 
                 if (pedidosActivos.length > 0) {
@@ -599,6 +608,21 @@
                     else if (pedido.estado === 'en_ruta') {
                         document.getElementById('map-overlay').classList.add('hidden');
                         document.getElementById('driver-info').style.display = 'flex';
+
+                        // Mostrar foto y nombre del repartidor
+                        const chofer = pedido.choferes;
+                        const driverPhotoDiv = document.getElementById('driver-photo');
+                        const driverNameSpan = document.getElementById('driver-name');
+                        
+                        if (chofer) {
+                            driverPhotoDiv.style.backgroundImage = chofer.imagen_url 
+                                ? `url(${chofer.imagen_url})` 
+                                : "url('https://via.placeholder.com/48')";
+                            driverNameSpan.textContent = chofer.nombre || 'Repartidor';
+                        } else {
+                            driverPhotoDiv.style.backgroundImage = "url('https://via.placeholder.com/48')";
+                            driverNameSpan.textContent = 'Repartidor';
+                        }
 
                         const ubicacionesRes = await fetch(
                             `${SUPABASE_URL}/rest/v1/ubicaciones_repartidor?chofer_id=eq.${pedido.chofer_id || 1}&order=updated_at.desc&limit=1`,
@@ -627,7 +651,6 @@
                         }
                     }
                 } else {
-                    // No hay pedido activo. ¿El anterior se entregó?
                     if (previousActiveOrderId) {
                         const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${previousActiveOrderId}&select=estado,fecha_entrega`, { headers });
                         const checkData = await checkRes.json();
@@ -657,7 +680,6 @@
             }
         }
 
-        // Suscripción a cambios en el pedido activo
         function subscribeToActiveOrder() {
             if (!clienteActual) return;
             unsubscribeAll();
@@ -675,7 +697,6 @@
             activeChannels.push(channel);
         }
 
-        // Cambio de Tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -687,7 +708,7 @@
 
                 if (tabName === 'seguimiento') {
                     rastrearPedidoActivo();
-                    subscribeToActiveOrder(); // suscripción en tiempo real
+                    subscribeToActiveOrder();
                 } else {
                     unsubscribeAll();
                 }
