@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-app: #09090b;
@@ -191,7 +191,6 @@
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
 
-        /* Overlay de entregado */
         .delivered-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -287,13 +286,11 @@
                     <div id="active-order-map" style="display: none;">
                         <div class="tracking-container">
                             <div id="map"></div>
-                            <!-- Overlay de espera / en ruta -->
                             <div class="map-overlay" id="map-overlay">
                                 <i data-lucide="loader" style="color: var(--primary-blue); width: 32px; height: 32px; margin-bottom: 16px;"></i>
                                 <h3 style="margin-bottom: 8px;">Esperando confirmación</h3>
                                 <p style="font-size: 0.85rem; color: var(--text-muted);">Estamos asignando un repartidor a tu pedido. En breve verás la ruta.</p>
                             </div>
-                            <!-- Overlay de entregado -->
                             <div class="delivered-overlay hidden" id="delivered-overlay">
                                 <i data-lucide="check-circle" style="color: var(--success-green); width: 48px; height: 48px; margin-bottom: 16px;"></i>
                                 <h3 style="margin-bottom: 8px;">¡Pedido entregado!</h3>
@@ -330,6 +327,8 @@
             "Content-Type": "application/json"
         };
 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let clienteActual = null;
         let ubicacionActual = null;
         let direccionLegible = "";
@@ -341,10 +340,15 @@
         let rutaLinea = null;
         let marcadorCliente = null;
         let marcadorRepartidor = null;
-        let pedidoActivoInterval = null;
-        let previousActiveOrderId = null; // para detectar entregas
+        let activeChannels = [];
+        let previousActiveOrderId = null;
 
         lucide.createIcons();
+
+        function unsubscribeAll() {
+            activeChannels.forEach(ch => supabaseClient.removeChannel(ch));
+            activeChannels = [];
+        }
 
         function checkSession() {
             const savedSession = localStorage.getItem('waterApp_session');
@@ -510,7 +514,6 @@
                     alert("¡Pedido realizado!");
                     document.getElementById('order-summary').style.display = 'none';
                     cargarProductos(); cargarHistorial();
-                    // Saltar a seguimiento
                     document.querySelector('[data-tab="seguimiento"]').click();
                 }
             } catch (e) {
@@ -545,7 +548,6 @@
             lucide.createIcons();
         }
 
-        // --- LÓGICA DEL MAPA Y SEGUIMIENTO (con detección de entrega) ---
         function animarMarcador(marker, newLatLng, duracion = 1000) {
             const inicio = marker.getLatLng();
             const inicioTiempo = performance.now();
@@ -581,7 +583,7 @@
 
                 if (pedidosActivos.length > 0) {
                     const pedido = pedidosActivos[0];
-                    previousActiveOrderId = pedido.id; // Recordamos el ID
+                    previousActiveOrderId = pedido.id;
                     document.getElementById('no-active-order').style.display = 'none';
                     document.getElementById('active-order-map').style.display = 'block';
                     document.getElementById('delivered-overlay').classList.add('hidden');
@@ -627,29 +629,25 @@
                 } else {
                     // No hay pedido activo. ¿El anterior se entregó?
                     if (previousActiveOrderId) {
-                        // Verificar el estado del pedido anterior
                         const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${previousActiveOrderId}&select=estado,fecha_entrega`, { headers });
                         const checkData = await checkRes.json();
                         if (checkData.length > 0 && checkData[0].estado === 'completado') {
-                            // Mostrar overlay de entregado
                             document.getElementById('active-order-map').style.display = 'block';
                             document.getElementById('no-active-order').style.display = 'none';
                             document.getElementById('map-overlay').classList.add('hidden');
                             document.getElementById('driver-info').style.display = 'none';
                             document.getElementById('delivered-overlay').classList.remove('hidden');
 
-                            // Ocultar después de 10 segundos y resetear
                             setTimeout(() => {
                                 document.getElementById('active-order-map').style.display = 'none';
                                 document.getElementById('no-active-order').style.display = 'block';
                                 document.getElementById('delivered-overlay').classList.add('hidden');
                                 previousActiveOrderId = null;
-                                if (pedidoActivoInterval) clearInterval(pedidoActivoInterval);
+                                unsubscribeAll();
                             }, 10000);
-                            return; // Salir sin reestablecer el intervalo
+                            return;
                         }
                     }
-                    // Sin pedido activo y el anterior no se completó o ya fue mostrado
                     document.getElementById('no-active-order').style.display = 'block';
                     document.getElementById('active-order-map').style.display = 'none';
                     previousActiveOrderId = null;
@@ -657,6 +655,24 @@
             } catch(e) {
                 console.error("Error rastreando pedido:", e);
             }
+        }
+
+        // Suscripción a cambios en el pedido activo
+        function subscribeToActiveOrder() {
+            if (!clienteActual) return;
+            unsubscribeAll();
+            const channel = supabaseClient
+                .channel('pedido-activo')
+                .on('postgres_changes', 
+                    { event: 'UPDATE', schema: 'public', table: 'pedidos', filter: `cliente_id=eq.${clienteActual.id}` },
+                    (payload) => {
+                        if (payload.new.estado === 'en_ruta' || payload.new.estado === 'completado') {
+                            rastrearPedidoActivo();
+                        }
+                    }
+                )
+                .subscribe();
+            activeChannels.push(channel);
         }
 
         // Cambio de Tabs
@@ -671,10 +687,9 @@
 
                 if (tabName === 'seguimiento') {
                     rastrearPedidoActivo();
-                    if(pedidoActivoInterval) clearInterval(pedidoActivoInterval);
-                    pedidoActivoInterval = setInterval(rastrearPedidoActivo, 5000);
+                    subscribeToActiveOrder(); // suscripción en tiempo real
                 } else {
-                    if(pedidoActivoInterval) clearInterval(pedidoActivoInterval);
+                    unsubscribeAll();
                 }
             });
         });
