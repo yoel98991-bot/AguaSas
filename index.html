@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Water SaaS - Cliente</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg-app: #0A0F1E;
-            --bg-card: #151B2E;
-            --bg-card-highlight: #1E253A;
-            --primary-blue: #2D68FF;
-            --text-main: #FFFFFF;
-            --text-muted: #8A94A6;
-            --success-green: #22C55E;
-            --danger-red: #EF4444;
-            --radius-card: 20px;
-            --radius-button: 16px;
+            /* Paleta minimalista y moderna */
+            --bg-app: #09090b;
+            --bg-card: #18181b;
+            --bg-card-highlight: #27272a;
+            --border-color: #27272a;
+            --primary-blue: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --success-green: #22c55e;
+            --warning-yellow: #eab308;
+            --radius-card: 16px;
+            --radius-button: 12px;
             --radius-pill: 9999px;
         }
 
@@ -33,66 +37,138 @@
         .container {
             max-width: 480px;
             margin: 0 auto;
-            padding: 20px 16px 100px;
+            padding: 24px 20px 100px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 40px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
         .logo {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
             color: var(--primary-blue);
         }
 
         .subtitle {
             color: var(--text-muted);
             font-size: 0.9rem;
-            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        /* --- Setup Section --- */
+        .setup-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
         .location-card {
             background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 20px;
+            padding: 24px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .location-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
         }
 
-        .location-icon { font-size: 1.8rem; }
+        .location-icon { 
+            color: var(--text-muted);
+            display: flex;
+        }
 
         .location-text { flex: 1; }
 
         .location-address {
             font-weight: 500;
             font-size: 0.95rem;
+            line-height: 1.4;
         }
 
         .location-coords {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
+            margin-top: 4px;
         }
 
+        .input-group { margin-bottom: 8px; }
+
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input {
+            width: 100%;
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-button);
+            padding: 14px 16px;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .input:focus {
+            border-color: var(--primary-blue);
+        }
+
+        /* --- Buttons --- */
         .btn {
-            background: var(--primary-blue);
-            color: white;
+            background: var(--text-main);
+            color: var(--bg-app);
             border: none;
             border-radius: var(--radius-button);
-            padding: 14px 24px;
+            padding: 16px 24px;
             font-weight: 600;
             font-size: 0.95rem;
             cursor: pointer;
             width: 100%;
             transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(45,104,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
         }
 
         .btn:disabled {
@@ -100,44 +176,27 @@
             cursor: not-allowed;
         }
 
-        .input-group { margin-bottom: 16px; }
-
-        .input-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .input {
-            width: 100%;
-            background: var(--bg-card-highlight);
-            border: 1px solid rgba(138,148,166,0.2);
-            border-radius: var(--radius-button);
-            padding: 14px 18px;
-            color: var(--text-main);
-            font-size: 0.95rem;
-        }
-
+        /* --- App Section --- */
         .catalog {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 16px;
             margin-bottom: 24px;
         }
 
         .product-card {
-            background: var(--bg-card);
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 16px;
+            padding: 20px 16px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
+            transition: all 0.2s ease;
         }
 
         .product-card.selected {
             border-color: var(--primary-blue);
-            background: var(--bg-card-highlight);
+            background: rgba(59, 130, 246, 0.05);
         }
 
         .product-card.disabled {
@@ -146,160 +205,253 @@
             pointer-events: none;
         }
 
-        .product-emoji { font-size: 2rem; }
+        .product-icon { 
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .product-card.selected .product-icon {
+            color: var(--primary-blue);
+        }
 
         .product-name {
             font-weight: 600;
-            margin: 8px 0 4px;
+            font-size: 0.95rem;
+            margin: 0 0 4px;
         }
 
         .product-price {
-            color: var(--success-green);
+            color: var(--text-main);
             font-weight: 700;
+            font-size: 1.1rem;
         }
 
         .product-available {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 4px;
+            margin-top: 8px;
         }
 
+        /* --- Orders & History --- */
         .order-section {
             background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 20px;
+            padding: 24px;
             margin-bottom: 24px;
         }
 
         .section-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            color: var(--text-main);
         }
 
         .order-summary {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
-            border-top: 1px solid rgba(138,148,166,0.1);
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
         }
+        
+        .order-summary:last-of-type {
+            border-bottom: none;
+            margin-bottom: 16px;
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-app);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-color);
+        }
+
+        .qty-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .qty-btn:hover { color: var(--text-main); }
 
         .total {
             font-weight: 700;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         .history-item {
-            background: var(--bg-card);
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
             padding: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 4px 10px;
             border-radius: var(--radius-pill);
             font-size: 0.7rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .badge-pendiente { background: rgba(234,179,8,0.2); color: #facc15; }
-        .badge-en_ruta { background: rgba(45,104,255,0.2); color: #60a5fa; }
-        .badge-completado { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .badge-pendiente { background: rgba(234,179,8,0.1); color: var(--warning-yellow); border: 1px solid rgba(234,179,8,0.2); }
+        .badge-en_ruta { background: rgba(59,130,246,0.1); color: var(--primary-blue); border: 1px solid rgba(59,130,246,0.2); }
+        .badge-completado { background: rgba(34,197,94,0.1); color: var(--success-green); border: 1px solid rgba(34,197,94,0.2); }
 
+        .history-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Tabs --- */
         .tab-bar {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 6px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-color);
         }
 
         .tab {
             flex: 1;
-            padding: 12px;
-            background: var(--bg-card);
+            padding: 10px;
             border-radius: var(--radius-pill);
             text-align: center;
             font-weight: 500;
+            font-size: 0.9rem;
             color: var(--text-muted);
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         .tab.active {
-            background: var(--primary-blue);
-            color: white;
+            background: var(--bg-card-highlight);
+            color: var(--text-main);
         }
 
-        .view { display: none; }
+        .view { display: none; animation: fadeIn 0.3s ease; }
         .view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">💧 WaterApp</div>
-            <div class="subtitle">Pedí agua en minutos</div>
+            <div class="logo">
+                <i data-lucide="droplet"></i>
+                WaterApp
+            </div>
+            <div class="subtitle">Agua purificada a tu puerta</div>
         </div>
 
-        <!-- Setup (teléfono y ubicación) -->
-        <div id="setup-section" class="view active">
-            <div class="location-card">
-                <div class="input-group">
-                    <label class="input-label">Tu teléfono</label>
-                    <input type="tel" class="input" id="telefono" placeholder="+54 11 1234-5678">
-                </div>
-                <div class="location-row">
-                    <span class="location-icon">📍</span>
-                    <div class="location-text">
-                        <div class="location-address" id="direccion-text">Obteniendo ubicación...</div>
-                        <div class="location-coords" id="coords-text">...</div>
+        <div id="setup-section" class="view">
+            <div class="setup-wrapper">
+                <div class="location-card">
+                    <div class="input-group">
+                        <label class="input-label">Número de teléfono</label>
+                        <input type="tel" class="input" id="telefono" placeholder="+54 11 1234-5678">
+                    </div>
+                    <div class="location-row">
+                        <div class="location-icon">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <div class="location-text">
+                            <div class="location-address" id="direccion-text">Obteniendo ubicación...</div>
+                            <div class="location-coords" id="coords-text">Por favor, espera</div>
+                        </div>
                     </div>
                 </div>
-                <button class="btn" id="btn-confirmar-ubicacion" style="margin-top: 16px;">Confirmar y Empezar</button>
+                <button class="btn btn-primary" id="btn-confirmar-ubicacion">
+                    Continuar <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+                </button>
             </div>
         </div>
 
-        <!-- App principal -->
         <div id="app-section" class="view">
             <div class="tab-bar">
-                <div class="tab active" data-tab="pedir">Pedir</div>
-                <div class="tab" data-tab="historial">Historial</div>
+                <div class="tab active" data-tab="pedir">Nuevo Pedido</div>
+                <div class="tab" data-tab="historial">Mis Pedidos</div>
             </div>
 
-            <!-- Vista Pedir -->
             <div id="view-pedir" class="view active">
-                <div class="section-title">Seleccioná producto</div>
+                <div class="section-title">Catálogo disponible</div>
                 <div class="catalog" id="catalog"></div>
+                
                 <div class="order-section" id="order-summary" style="display: none;">
+                    <div class="section-title" style="margin-bottom: 8px;">Resumen</div>
                     <div class="order-summary">
-                        <span>Pedido</span>
-                        <span id="order-product-name">-</span>
+                        <span style="color: var(--text-muted);">Producto</span>
+                        <span id="order-product-name" style="font-weight: 500;">-</span>
                     </div>
                     <div class="order-summary">
-                        <span>Cantidad</span>
-                        <span>
-                            <button id="btn-minus" style="background:transparent;border:none;color:var(--text-main);font-size:1.2rem;">−</button>
-                            <span id="cantidad">1</span>
-                            <button id="btn-plus" style="background:transparent;border:none;color:var(--text-main);font-size:1.2rem;">+</button>
-                        </span>
+                        <span style="color: var(--text-muted);">Cantidad</span>
+                        <div class="qty-controls">
+                            <button class="qty-btn" id="btn-minus"><i data-lucide="minus" style="width: 16px;"></i></button>
+                            <span id="cantidad" style="font-weight: 600; min-width: 20px; text-align: center;">1</span>
+                            <button class="qty-btn" id="btn-plus"><i data-lucide="plus" style="width: 16px;"></i></button>
+                        </div>
                     </div>
                     <div class="order-summary total">
-                        <span>Total</span>
-                        <span id="order-total">$0</span>
+                        <span>Total a pagar</span>
+                        <span id="order-total">$0.00</span>
                     </div>
-                    <button class="btn" id="btn-realizar-pedido">Realizar Pedido</button>
+                    <button class="btn btn-primary" id="btn-realizar-pedido">
+                        <i data-lucide="check" style="width: 18px;"></i> Confirmar Pedido
+                    </button>
                 </div>
             </div>
 
-            <!-- Vista Historial -->
             <div id="view-historial" class="view">
-                <div class="section-title">Mis pedidos</div>
+                <div class="section-title">Historial de compras</div>
                 <div id="historial-list"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // Inicializar iconos de Lucide en la primera carga
+        lucide.createIcons();
+
         // Configuración Supabase
         const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
@@ -316,6 +468,26 @@
         let productoSeleccionado = null;
         let cantidad = 1;
         let stockActualLitros = 0;
+
+        // Comprobar sesión al inicio
+        function checkSession() {
+            const savedSession = localStorage.getItem('waterApp_session');
+            if (savedSession) {
+                const sessionData = JSON.parse(savedSession);
+                clienteActual = sessionData.clienteActual;
+                ubicacionActual = sessionData.ubicacionActual;
+                direccionLegible = sessionData.direccionLegible;
+
+                document.getElementById('setup-section').classList.remove('active');
+                document.getElementById('app-section').classList.add('active');
+
+                cargarProductos();
+                cargarHistorial();
+            } else {
+                document.getElementById('setup-section').classList.add('active');
+                initLocation();
+            }
+        }
 
         // Inicializar ubicación
         function initLocation() {
@@ -368,24 +540,39 @@
             const telefono = document.getElementById('telefono').value.trim();
             if (!telefono) return alert("Ingresá tu teléfono");
             if (!ubicacionActual) return alert("Esperá la ubicación...");
+            
             const btn = document.getElementById('btn-confirmar-ubicacion');
-            btn.disabled = true; btn.textContent = "Cargando...";
+            btn.disabled = true; 
+            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Procesando...`;
+            lucide.createIcons();
+
             try {
                 clienteActual = await encontrarOCrearCliente(telefono);
+                
+                // Guardar en LocalStorage
+                localStorage.setItem('waterApp_session', JSON.stringify({
+                    clienteActual,
+                    ubicacionActual,
+                    direccionLegible
+                }));
+
                 document.getElementById('setup-section').classList.remove('active');
                 document.getElementById('app-section').classList.add('active');
+                
                 await cargarProductos();
                 cargarHistorial();
             } catch (e) {
                 alert("Error conectando al servidor: " + e.message);
             }
-            btn.disabled = false; btn.textContent = "Confirmar y Empezar";
+            
+            btn.disabled = false; 
+            btn.innerHTML = `Continuar <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>`;
+            lucide.createIcons();
         });
 
         // Cargar productos y stock
         async function cargarProductos() {
             try {
-                // Obtener stock
                 const [stockRes] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=litros_disponibles&limit=1`, { headers }).then(r => r.json());
                 stockActualLitros = stockRes?.litros_disponibles || 0;
             } catch (e) {
@@ -402,13 +589,18 @@
                 const sinStock = disponibles <= 0;
                 return `
                     <div class="product-card ${sinStock ? 'disabled' : ''}" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-litros="${capacidad}">
-                        <div class="product-emoji">💧</div>
+                        <div class="product-icon">
+                            <i data-lucide="package" style="width: 32px; height: 32px;"></i>
+                        </div>
                         <div class="product-name">${p.nombre}</div>
                         <div class="product-price">$${p.precio}</div>
-                        <div class="product-available">${capacidad} L - ${sinStock ? 'Agotado' : `${disponibles} disponibles`}</div>
+                        <div class="product-available">${capacidad}L • ${sinStock ? 'Agotado' : `${disponibles} disp.`}</div>
                     </div>
                 `;
             }).join('');
+
+            // Actualizar iconos dinámicos
+            lucide.createIcons();
 
             // Seleccionar producto
             document.querySelectorAll('.product-card:not(.disabled)').forEach(card => {
@@ -438,19 +630,21 @@
         document.getElementById('btn-plus').addEventListener('click', () => { cantidad++; actualizarResumenPedido(); });
         document.getElementById('btn-minus').addEventListener('click', () => { if (cantidad > 1) cantidad--; actualizarResumenPedido(); });
 
-        // Realizar pedido (con descuento de stock)
+        // Realizar pedido
         document.getElementById('btn-realizar-pedido').addEventListener('click', async () => {
             if (!productoSeleccionado || !clienteActual) return;
             const montoTotal = productoSeleccionado.precio * cantidad;
             const litrosADescontar = productoSeleccionado.capacidad_litros * cantidad;
+            
+            const btn = document.getElementById('btn-realizar-pedido');
+            btn.disabled = true;
 
             try {
-                // Verificar stock suficiente
                 if (litrosADescontar > 0 && litrosADescontar > stockActualLitros) {
+                    btn.disabled = false;
                     return alert('No hay suficiente agua en stock para este pedido.');
                 }
 
-                // Crear pedido
                 const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
                     method: 'POST',
                     headers: { ...headers, 'Prefer': 'return=representation' },
@@ -466,7 +660,6 @@
                 const nuevoPedido = await pedidoRes.json();
 
                 if (nuevoPedido && nuevoPedido[0]) {
-                    // Descontar stock
                     if (litrosADescontar > 0) {
                         const [stock] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=id,litros_disponibles&limit=1`, { headers }).then(r => r.json());
                         const nuevoStock = stock.litros_disponibles - litrosADescontar;
@@ -482,7 +675,7 @@
                     productoSeleccionado = null;
                     document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
                     document.getElementById('order-summary').style.display = 'none';
-                    cargarProductos(); // refrescar disponibilidad
+                    cargarProductos();
                     cargarHistorial();
                 } else {
                     throw new Error("Respuesta inesperada");
@@ -490,6 +683,7 @@
             } catch (e) {
                 alert("Error al crear el pedido: " + e.message);
             }
+            btn.disabled = false;
         });
 
         // Cargar historial
@@ -498,25 +692,38 @@
             const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&select=id,productos(nombre),monto,estado,fecha_pedido&order=fecha_pedido.desc`, { headers });
             const pedidos = await res.json();
             const container = document.getElementById('historial-list');
+            
             if (pedidos.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-muted);">No tenés pedidos todavía.</p>';
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
+                        <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
+                        <p>No tienes pedidos todavía.</p>
+                    </div>`;
+                lucide.createIcons();
                 return;
             }
+            
             container.innerHTML = pedidos.map(p => {
                 const badgeClass = `badge-${p.estado}`;
                 return `
                     <div class="history-item">
-                        <div style="display:flex;justify-content:space-between;">
-                            <strong>${p.productos?.nombre || 'Producto'}</strong>
+                        <div class="history-header">
+                            <strong class="history-title">
+                                <i data-lucide="box" style="width: 16px;"></i>
+                                ${p.productos?.nombre || 'Producto'}
+                            </strong>
                             <span class="badge ${badgeClass}">${p.estado}</span>
                         </div>
-                        <div style="display:flex;justify-content:space-between;margin-top:8px;color:var(--text-muted);">
+                        <div class="history-details">
                             <span>${new Date(p.fecha_pedido).toLocaleDateString()}</span>
-                            <span>$${p.monto}</span>
+                            <span style="font-weight: 500; color: var(--text-main);">$${p.monto.toFixed(2)}</span>
                         </div>
                     </div>
                 `;
             }).join('');
+            
+            // Actualizar iconos de historial
+            lucide.createIcons();
         }
 
         // Tabs
@@ -530,8 +737,8 @@
             });
         });
 
-        // Iniciar
-        initLocation();
+        // Iniciar flujo (Verificar sesión o pedir ubicación)
+        checkSession();
     </script>
 </body>
 </html>
