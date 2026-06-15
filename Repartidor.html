@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Repartidor - App</title>
+    <title>Repartidor - Pro</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            /* Paleta elegante oscura con acentos azules (estilo agua/clean) */
-            --bg-app: #0f172a; /* Slate 900 */
-            --bg-card: #1e293b; /* Slate 800 */
+            --bg-app: #0f172a; 
+            --bg-card: #1e293b; 
             --border-color: #334155;
-            --primary-blue: #0ea5e9; /* Sky 500 */
+            --primary-blue: #0ea5e9; 
             --primary-hover: #0284c7;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --success-green: #10b981;
             --danger-red: #ef4444;
-            --radius-card: 20px;
-            --radius-button: 14px;
-            --radius-pill: 9999px;
-            --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            --radius-card: 16px;
+            --radius-button: 12px;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,113 +40,137 @@
             max-width: 600px; 
             margin: 0 auto; 
             width: 100%; 
-            padding: 24px 20px; 
+            padding: 20px; 
             flex: 1; 
             display: flex;
             flex-direction: column;
         }
 
-        /* --- LOGIN --- */
-        #login-section {
-            margin: auto 0; /* Centrado vertical */
+        /* --- TIPOGRAFÍA E ÍCONOS --- */
+        i[data-lucide] {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
         }
+        .icon-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* --- LOGIN --- */
+        #login-section { margin: auto 0; }
         
         .login-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 32px 24px;
+            padding: 40px 24px;
             box-shadow: var(--shadow-card);
             text-align: center;
         }
 
-        .login-header {
-            margin-bottom: 24px;
-        }
-
-        .login-header h2 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-            color: var(--text-main);
-        }
-
-        .login-header p {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
+        .login-header h2 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 600;}
+        .login-header p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 30px;}
 
         .login-card input {
             width: 100%;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-button);
-            padding: 14px 16px;
+            padding: 16px;
             color: var(--text-main);
             font-size: 1.1rem;
-            margin-top: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             text-align: center;
             letter-spacing: 1px;
-            transition: border-color 0.3s;
+            transition: all 0.2s;
         }
-
-        .login-card input:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-        }
+        .login-card input:focus { outline: none; border-color: var(--primary-blue); background: var(--bg-app); }
 
         /* --- BOTONES --- */
         .btn {
             background: var(--primary-blue);
             color: white;
             border: none;
-            padding: 14px 20px;
+            padding: 16px 20px;
             width: 100%;
             border-radius: var(--radius-button);
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+        .btn:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn:active:not(:disabled) { transform: translateY(1px); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
-        
-        .btn-success { background: var(--success-green); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-success { background: var(--success-green); color: #fff;}
         .btn-success:hover { background: #059669; }
         
-        .btn-danger { background: transparent; border: 1px solid var(--danger-red); color: var(--danger-red); padding: 8px 16px; width: auto; box-shadow: none; }
-        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+        .btn-danger { background: transparent; border: 1px solid var(--danger-red); color: var(--danger-red); padding: 8px 16px; width: auto; font-size: 0.9rem;}
 
-        /* --- UI PRINCIPAL --- */
+        /* --- TOP BAR --- */
         .top-bar {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 20px;
-            background: var(--bg-card);
-            padding: 16px 20px;
-            border-radius: var(--radius-card);
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; background: var(--bg-card);
+            padding: 16px; border-radius: var(--radius-card);
             border: 1px solid var(--border-color);
         }
 
+        /* --- MAPA Y MARCADORES --- */
         #map {
-            height: 320px;
+            height: 350px;
             border-radius: var(--radius-card);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             border: 1px solid var(--border-color);
             background: #0f172a;
-            box-shadow: var(--shadow-card);
-            z-index: 1; /* Para evitar superposiciones raras */
+            z-index: 1; 
+        }
+        .leaflet-control-zoom { display: none; }
+        .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        
+        /* Transición suave para evitar saltos bruscos del GPS */
+        .leaflet-marker-icon.driver-marker-container {
+            transition: transform 0.6s linear !important;
         }
 
-        .leaflet-control-zoom { display: none; }
-        /* Filtro oscuro para el mapa */
-        .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        .driver-avatar-marker {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: 3px solid var(--primary-blue);
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
 
-        /* --- TARJETAS DE PEDIDO --- */
+        .driver-dot-marker {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.8), 0 0 20px rgba(14, 165, 233, 0.4);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+
+        .client-marker {
+            width: 24px; height: 24px;
+            background: var(--success-green);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        }
+
+        /* --- TARJETAS --- */
         .order-list { display: flex; flex-direction: column; gap: 16px; }
         
         .order-card, .current-order {
@@ -156,182 +178,81 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
             padding: 20px;
-            box-shadow: var(--shadow-card);
-            transition: transform 0.2s;
         }
 
         .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 1.1rem; font-weight: 600;
+            margin-bottom: 16px; padding-bottom: 16px;
             border-bottom: 1px solid var(--border-color);
         }
 
-        .monto-tag {
-            color: var(--success-green);
-            font-weight: 700;
-            font-size: 1.2rem;
-        }
+        .monto-tag { color: var(--success-green); font-weight: 700; font-size: 1.2rem; }
 
         .order-meta {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 12px;
         }
 
-        .order-meta div {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .order-meta div { display: flex; align-items: flex-start; gap: 12px; }
+        .order-meta i { color: var(--primary-blue); flex-shrink: 0; margin-top: 2px; }
 
         .badge {
-            display: inline-flex;
-            align-items: center;
-            background: rgba(14, 165, 233, 0.15);
-            color: var(--primary-blue);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-top: 8px;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(14, 165, 233, 0.1); color: var(--primary-blue);
+            padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
         }
 
-        /* --- ANIMACIÓN RADAR (ESPERANDO PEDIDOS) --- */
+        /* --- ESTADO VACÍO (ESPERANDO PEDIDOS) --- */
         .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            background: var(--bg-card);
-            border-radius: var(--radius-card);
+            text-align: center; padding: 40px 20px;
+            background: var(--bg-card); border-radius: var(--radius-card);
             border: 1px dashed var(--border-color);
         }
 
-        .radar-container {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-        }
-
-        .pulse-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: var(--primary-blue);
-            border-radius: 50%;
-            opacity: 0;
-            animation: radar-pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
-
-        .pulse-ring:nth-child(2) { animation-delay: 1s; }
-
-        @keyframes radar-pulse {
-            0% { transform: scale(0.5); opacity: 0.8; }
-            70%, 100% { transform: scale(2.5); opacity: 0; }
-        }
-
+        .radar-box { margin: 0 auto 20px; color: var(--primary-blue); opacity: 0.8;}
+        
         .realtime-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            color: var(--success-green);
-            margin-top: 12px;
-            font-weight: 500;
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.85rem; color: var(--success-green); margin-top: 16px;
+            background: rgba(16, 185, 129, 0.1); padding: 6px 12px; border-radius: 20px;
         }
 
         .dot-flashing {
-            width: 8px;
-            height: 8px;
-            background-color: var(--success-green);
-            border-radius: 50%;
-            animation: dot-blink 1.5s infinite linear;
+            width: 8px; height: 8px; background-color: var(--success-green);
+            border-radius: 50%; animation: dot-blink 1.5s infinite linear;
         }
-
-        @keyframes dot-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        @keyframes dot-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         /* --- PESTAÑAS --- */
         .tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            background: var(--bg-card);
-            padding: 6px;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--border-color);
+            display: flex; gap: 8px; margin-bottom: 20px;
+            background: rgba(15, 23, 42, 0.6); padding: 6px; border-radius: var(--radius-button);
         }
-
         .tab {
-            flex: 1;
-            padding: 12px;
-            border-radius: var(--radius-pill);
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.3s ease;
+            flex: 1; padding: 12px; border-radius: 10px;
+            text-align: center; font-weight: 500; font-size: 0.95rem;
+            color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-
-        .tab.active { 
-            background: var(--primary-blue); 
-            color: white; 
-            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
-        }
+        .tab.active { background: var(--bg-card); color: var(--primary-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 
         /* --- PERFIL --- */
         .profile-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 24px;
-            box-shadow: var(--shadow-card);
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-card); padding: 24px;
         }
-
         .avatar-preview {
-            width: 100px; height: 100px;
-            border-radius: 50%;
-            background: #0f172a;
-            margin: 0 auto 24px;
-            background-size: cover;
-            background-position: center;
-            border: 3px solid var(--primary-blue);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            width: 100px; height: 100px; border-radius: 50%; background: #0f172a;
+            margin: 0 auto 24px; background-size: cover; background-position: center;
+            border: 2px solid var(--border-color);
         }
-
         .form-group { margin-bottom: 20px; }
-        
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
         .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-button);
-            color: var(--text-main);
-            transition: border-color 0.3s;
+            width: 100%; padding: 14px; background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color); border-radius: var(--radius-button);
+            color: var(--text-main); font-size: 1rem;
         }
         .form-group input:focus { outline: none; border-color: var(--primary-blue); }
 
@@ -340,56 +261,66 @@
 </head>
 <body>
     <div class="container">
-        
+        <!-- Login -->
         <div id="login-section" class="login-card">
             <div class="login-header">
-                <h2>👋 Bienvenido</h2>
-                <p>Ingresa tu número para comenzar tu ruta</p>
+                <h2>Acceso Repartidor</h2>
+                <p>Ingresa tu número de registro</p>
             </div>
             <input type="tel" id="telefonoChofer" placeholder="Ej: 04120000000">
-            <button class="btn" id="btn-ingresar">Ingresar al sistema</button>
-            <p id="login-error" style="color: var(--danger-red); font-size: 0.85rem; margin-top: 12px; display: none;"></p>
+            <button class="btn" id="btn-ingresar">
+                <i data-lucide="log-in"></i> Iniciar Sesión
+            </button>
+            <p id="login-error" style="color: var(--danger-red); font-size: 0.85rem; margin-top: 16px; display: none;"></p>
         </div>
 
+        <!-- Zona de trabajo -->
         <div id="work-section" class="hidden">
-            
             <div class="top-bar">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="dot-flashing" style="width: 10px; height: 10px;"></div>
-                    <span id="chofer-nombre" style="font-weight: 600; font-size: 1.1rem;"></span>
+                <div class="icon-text">
+                    <div class="dot-flashing"></div>
+                    <span id="chofer-nombre" style="font-weight: 500;"></span>
                 </div>
-                <button class="btn-danger" id="btn-salir">Salir</button>
+                <button class="btn-danger btn" id="btn-salir" style="padding: 8px 16px;">
+                    <i data-lucide="log-out"></i> Salir
+                </button>
             </div>
 
+            <!-- Pestañas -->
             <div class="tabs">
-                <div class="tab active" data-tab="ruta">📍 En Ruta</div>
-                <div class="tab" data-tab="perfil">👤 Mi Perfil</div>
+                <div class="tab active" data-tab="ruta"><i data-lucide="map"></i> En Ruta</div>
+                <div class="tab" data-tab="perfil"><i data-lucide="user-cog"></i> Perfil</div>
             </div>
 
+            <!-- Contenido de Ruta -->
             <div id="tab-ruta" class="tab-content">
                 <div id="map"></div>
 
+                <!-- Pedido en curso -->
                 <div id="pedido-en-ruta" class="current-order hidden">
-                    <h3 style="color: var(--primary-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                        🚚 Pedido en curso
+                    <h3 class="icon-text" style="color: var(--primary-blue); margin-bottom: 20px;">
+                        <i data-lucide="package"></i> Orden en Curso
                     </h3>
                     <div class="order-meta">
-                        <div><span>👤</span> <strong id="ruta-cliente" style="color: white;"></strong></div>
-                        <div><span>📍</span> <span id="ruta-direccion"></span></div>
-                        <div><span>📞</span> <span id="ruta-telefono"></span></div>
+                        <div><i data-lucide="user"></i> <strong id="ruta-cliente" style="color: white; font-weight: 500;"></strong></div>
+                        <div><i data-lucide="map-pin"></i> <span id="ruta-direccion"></span></div>
+                        <div><i data-lucide="phone"></i> <span id="ruta-telefono"></span></div>
                     </div>
-                    <div style="margin: 20px 0; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; text-align: center;">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">Total a cobrar:</span>
+                    <div style="margin: 24px 0; padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-size: 0.95rem;">Total a cobrar:</span>
                         <div class="monto-tag">$<span id="ruta-monto"></span></div>
                     </div>
-                    <button class="btn btn-success" id="btn-entregar">Completar Entrega</button>
+                    <button class="btn btn-success" id="btn-entregar">
+                        <i data-lucide="check-circle"></i> Confirmar Entrega
+                    </button>
                     <p id="error-venta" style="color: var(--danger-red); font-size: 0.85rem; margin-top: 12px; display: none; text-align: center;"></p>
                 </div>
 
-                <div id="lista-pendientes" class="order-list">
-                    </div>
+                <!-- Lista de pendientes -->
+                <div id="lista-pendientes" class="order-list"></div>
             </div>
 
+            <!-- Contenido de Perfil -->
             <div id="tab-perfil" class="tab-content hidden">
                 <div class="profile-section">
                     <div class="avatar-preview" id="avatar-preview"></div>
@@ -405,7 +336,9 @@
                         <label>Foto de Perfil (URL)</label>
                         <input type="url" id="perfil-imagen" placeholder="https://ejemplo.com/foto.jpg">
                     </div>
-                    <button class="btn" id="btn-guardar-perfil" style="margin-top: 10px;">Actualizar Datos</button>
+                    <button class="btn" id="btn-guardar-perfil" style="margin-top: 10px;">
+                        <i data-lucide="save"></i> Actualizar Datos
+                    </button>
                 </div>
             </div>
         </div>
@@ -414,12 +347,7 @@
     <script>
         const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
-        const headers = {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            "Content-Type": "application/json"
-        };
-
+        const headers = { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json" };
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let choferActual = null;
@@ -427,17 +355,17 @@
         let marcadorChofer = null;
         let marcadorCliente = null;
         let miUbicacion = null;
-        let miHeading = 0; 
         let envioUbicacionInterval = null;
         let pedidoEnRuta = null;
         let canalesActivos = [];
+        let primeraVezCentrado = false;
 
-        // ----- INIT: Cargar LocalStorage -----
+        // Inicializar iconos de Lucide
+        lucide.createIcons();
+
         document.addEventListener('DOMContentLoaded', () => {
             const telefonoGuardado = localStorage.getItem('choferTelefono');
-            if (telefonoGuardado) {
-                document.getElementById('telefonoChofer').value = telefonoGuardado;
-            }
+            if (telefonoGuardado) document.getElementById('telefonoChofer').value = telefonoGuardado;
         });
 
         function unsubscribeAll() {
@@ -445,7 +373,6 @@
             canalesActivos = [];
         }
 
-        // ----- NAVEGACIÓN -----
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -463,16 +390,13 @@
             });
         });
 
-        // ----- LOGIN -----
         document.getElementById('btn-ingresar').addEventListener('click', async () => {
             const telefono = document.getElementById('telefonoChofer').value.trim();
-            if (!telefono) {
-                mostrarErrorLogin('Por favor, ingresa tu teléfono.');
-                return;
-            }
+            if (!telefono) return mostrarErrorLogin('Por favor, ingresa tu teléfono.');
             
             const btn = document.getElementById('btn-ingresar');
-            btn.disabled = true; btn.textContent = 'Conectando...';
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Conectando...';
+            lucide.createIcons();
             
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?telefono=eq.${telefono}&select=*&limit=1`, { headers });
@@ -480,13 +404,12 @@
                 
                 if (choferes.length === 0) {
                     mostrarErrorLogin('Número no registrado en el sistema.');
-                    btn.disabled = false; btn.textContent = 'Ingresar al sistema';
+                    btn.disabled = false; btn.innerHTML = '<i data-lucide="log-in"></i> Iniciar Sesión';
+                    lucide.createIcons();
                     return;
                 }
                 
-                // Guardar en LocalStorage para la próxima vez
                 localStorage.setItem('choferTelefono', telefono);
-                
                 choferActual = choferes[0];
                 document.getElementById('chofer-nombre').textContent = choferActual.nombre;
                 
@@ -494,10 +417,12 @@
                 document.getElementById('work-section').classList.remove('hidden');
                 document.getElementById('login-error').style.display = 'none';
                 
+                primeraVezCentrado = false;
                 await iniciarApp();
             } catch (error) {
                 mostrarErrorLogin('Error de conexión a la base de datos.');
-                btn.disabled = false; btn.textContent = 'Ingresar al sistema';
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="log-in"></i> Iniciar Sesión';
+                lucide.createIcons();
             }
         });
 
@@ -512,44 +437,53 @@
                 alert('No puedes salir con un pedido en ruta. Entrégalo primero.');
                 return;
             }
-            // Limpiar datos
             if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
             unsubscribeAll();
-            localStorage.removeItem('choferTelefono'); // Opcional: borrar el número guardado al salir
             choferActual = null;
+            if (marcadorChofer) { mapa.removeLayer(marcadorChofer); marcadorChofer = null; }
             
             document.getElementById('work-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('telefonoChofer').value = '';
             document.getElementById('btn-ingresar').disabled = false;
-            document.getElementById('btn-ingresar').textContent = 'Ingresar al sistema';
+            document.getElementById('btn-ingresar').innerHTML = '<i data-lucide="log-in"></i> Iniciar Sesión';
+            lucide.createIcons();
         });
 
-        // ----- LÓGICA DE MAPA Y UBICACIÓN -----
         async function iniciarApp() {
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
                     (pos) => {
                         miUbicacion = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        miHeading = pos.coords.heading || 0;
                         actualizarMarcadorChofer();
                     },
                     (err) => console.warn('Error GPS:', err),
-                    { enableHighAccuracy: true }
+                    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
                 );
             }
             if (!miUbicacion) {
-                try {
-                    miUbicacion = await getCurrentPosition();
-                } catch(e) {
-                    // Posición por defecto si falla el GPS para que el mapa renderice
-                    miUbicacion = { lat: 10.1620, lng: -68.0077 }; 
-                }
+                try { miUbicacion = await getCurrentPosition(); } 
+                catch(e) { miUbicacion = { lat: 10.1620, lng: -68.0077 }; }
             }
             initMap(miUbicacion.lat, miUbicacion.lng);
             await recuperarPedidoEnRuta();
             await cargarPedidos();
             subscribePendientes();
+        }
+
+        function crearIconoChofer() {
+            if (choferActual && choferActual.imagen_url) {
+                return L.divIcon({
+                    html: `<div class="driver-avatar-marker" style="background-image: url('${choferActual.imagen_url}')"></div>`,
+                    className: 'driver-marker-container',
+                    iconSize: [44, 44], iconAnchor: [22, 22]
+                });
+            } else {
+                return L.divIcon({
+                    html: `<div class="driver-dot-marker"></div>`,
+                    className: 'driver-marker-container',
+                    iconSize: [20, 20], iconAnchor: [10, 10]
+                });
+            }
         }
 
         function initMap(lat, lng) {
@@ -562,29 +496,17 @@
                 attribution: '&copy; OpenStreetMap'
             }).addTo(mapa);
             
-            const arrowIcon = L.divIcon({
-                html: '<div style="font-size: 28px; line-height: 1; transform-origin: center; transition: transform 0.3s; color: var(--primary-blue);">🚀</div>',
-                className: '', iconSize: [28, 28], iconAnchor: [14, 14]
-            });
-            marcadorChofer = L.marker([lat, lng], { icon: arrowIcon }).addTo(mapa);
-            actualizarRotacionFlecha();
-        }
-
-        function actualizarRotacionFlecha() {
-            if (!marcadorChofer) return;
-            const icon = marcadorChofer.getElement();
-            if (icon) {
-                const flecha = icon.querySelector('div');
-                if (flecha) flecha.style.transform = `rotate(${miHeading}deg)`;
-            }
+            marcadorChofer = L.marker([lat, lng], { icon: crearIconoChofer() }).addTo(mapa);
         }
 
         function actualizarMarcadorChofer() {
             if (!marcadorChofer || !miUbicacion) return;
             marcadorChofer.setLatLng([miUbicacion.lat, miUbicacion.lng]);
-            actualizarRotacionFlecha();
-            if (!pedidoEnRuta) {
-                mapa.setView([miUbicacion.lat, miUbicacion.lng], mapa.getZoom());
+            
+            // Solo forzar el centro la primera vez o si está siguiendo ruta
+            if (!primeraVezCentrado && !pedidoEnRuta) {
+                mapa.setView([miUbicacion.lat, miUbicacion.lng], 16);
+                primeraVezCentrado = true;
             }
         }
 
@@ -592,17 +514,13 @@
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) reject('GPS no soportado');
                 navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        miHeading = pos.coords.heading || 0;
-                        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                    },
+                    pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
                     err => reject(err),
                     { enableHighAccuracy: true }
                 );
             });
         }
 
-        // ----- LÓGICA DE PEDIDOS -----
         async function recuperarPedidoEnRuta() {
             if (!choferActual) return;
             try {
@@ -621,16 +539,16 @@
         }
 
         function mostrarPedidoEnCurso() {
-            document.getElementById('ruta-cliente').textContent = pedidoEnRuta.cliente_nombre || '-';
-            document.getElementById('ruta-direccion').textContent = pedidoEnRuta.cliente_direccion || '-';
-            document.getElementById('ruta-telefono').textContent = pedidoEnRuta.cliente_telefono || '-';
+            document.getElementById('ruta-cliente').textContent = pedidoEnRuta.cliente_nombre || 'Desconocido';
+            document.getElementById('ruta-direccion').textContent = pedidoEnRuta.cliente_direccion || 'Sin dirección';
+            document.getElementById('ruta-telefono').textContent = pedidoEnRuta.cliente_telefono || 'No proporcionado';
             document.getElementById('ruta-monto').textContent = pedidoEnRuta.monto;
             
             document.getElementById('pedido-en-ruta').classList.remove('hidden');
             document.getElementById('lista-pendientes').classList.add('hidden');
 
             if (marcadorCliente) mapa.removeLayer(marcadorCliente);
-            const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [28, 28], iconAnchor: [14, 28] });
+            const clienteIcon = L.divIcon({ html: '<div class="client-marker"></div>', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
             marcadorCliente = L.marker([pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente], { icon: clienteIcon }).addTo(mapa);
             
             const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente]]);
@@ -655,16 +573,12 @@
         function renderEmptyState() {
             return `
                 <div class="empty-state">
-                    <div class="radar-container">
-                        <div class="pulse-ring"></div>
-                        <div class="pulse-ring"></div>
-                        <span>💧</span>
-                    </div>
-                    <h3 style="margin-bottom: 8px; color: var(--text-main);">Sin pedidos pendientes</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Esperando nuevas solicitudes...</p>
+                    <div class="radar-box"><i data-lucide="inbox" style="width: 48px; height: 48px; stroke-width: 1;"></i></div>
+                    <h3 style="margin-bottom: 8px; color: var(--text-main); font-weight: 500;">Bandeja Vacía</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">Esperando nuevas asignaciones</p>
                     <div class="realtime-status">
                         <div class="dot-flashing"></div>
-                        Conectado en tiempo real
+                        En línea y escuchando
                     </div>
                 </div>
             `;
@@ -688,6 +602,7 @@
 
                 if (pedidos.length === 0) {
                     listDiv.innerHTML = renderEmptyState();
+                    lucide.createIcons();
                     return;
                 }
 
@@ -706,31 +621,31 @@
                                 <span class="monto-tag">$${p.monto}</span>
                             </div>
                             <div class="order-meta">
-                                <div><span>📍</span> ${cliente.direccion || 'Sin dirección'}</div>
-                                <div><span>📞</span> ${cliente.telefono || 'N/D'}</div>
+                                <div><i data-lucide="map-pin"></i> <span>${cliente.direccion || 'Sin dirección'}</span></div>
+                                <div><i data-lucide="phone"></i> <span>${cliente.telefono || 'No especificado'}</span></div>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
-                                <span class="badge">A ${km} km de ti</span>
-                                <button class="btn" style="width: auto; padding: 10px 20px;" onclick="tomarPedido(${p.id}, ${p.lat}, ${p.lng}, ${p.cliente_id}, '${cliente.nombre?.replace(/'/g, "\\'") || 'Cliente'}', '${cliente.direccion?.replace(/'/g, "\\'") || ''}', '${cliente.telefono?.replace(/'/g, "\\'") || ''}', ${p.monto})">
-                                    Tomar pedido
+                                <span class="badge"><i data-lucide="navigation" style="width:14px; height:14px;"></i> ${km} km de ti</span>
+                                <button class="btn" style="width: auto; padding: 12px 20px; font-size: 0.9rem;" onclick="tomarPedido(${p.id}, ${p.lat}, ${p.lng}, ${p.cliente_id}, '${cliente.nombre?.replace(/'/g, "\\'") || 'Cliente'}', '${cliente.direccion?.replace(/'/g, "\\'") || ''}', '${cliente.telefono?.replace(/'/g, "\\'") || ''}', ${p.monto})">
+                                    Aceptar Orden
                                 </button>
                             </div>
                         </div>
                     `;
                 }).join('');
+                lucide.createIcons();
             } catch (error) {
-                listDiv.innerHTML = '<p style="color:var(--danger-red); text-align:center;">Error al cargar pedidos.</p>';
+                listDiv.innerHTML = '<p style="color:var(--danger-red); text-align:center;">Error al sincronizar datos.</p>';
             }
         }
 
         window.tomarPedido = async function(pedidoId, latCliente, lngCliente, clienteId, nombreCliente, direccionCliente, telefonoCliente, monto) {
             if (!choferActual) return;
-            if (!confirm('¿Confirmar que tomas este pedido?')) return;
+            if (!confirm('¿Deseas aceptar esta orden de entrega?')) return;
 
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoId}`, {
-                    method: 'PATCH',
-                    headers: { ...headers, 'Prefer': 'return=minimal' },
+                    method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({ estado: 'en_ruta', chofer_id: choferActual.id })
                 });
                 if (!res.ok) throw new Error(await res.text());
@@ -740,15 +655,16 @@
                     monto: monto, cliente_nombre: nombreCliente, cliente_direccion: direccionCliente, cliente_telefono: telefonoCliente
                 };
                 mostrarPedidoEnCurso();
-            } catch (error) { alert('Error al tomar pedido: ' + error.message); }
+            } catch (error) { alert('No se pudo procesar: ' + error.message); }
         };
 
         document.getElementById('btn-entregar').addEventListener('click', async () => {
             if (!pedidoEnRuta) return;
-            if (!confirm('¿Confirmar entrega del pedido?')) return;
+            if (!confirm('¿Confirmas que la orden fue entregada exitosamente?')) return;
             
             const btn = document.getElementById('btn-entregar');
-            btn.disabled = true; btn.textContent = 'Procesando...';
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Procesando...';
+            lucide.createIcons();
             document.getElementById('error-venta').style.display = 'none';
             
             try {
@@ -777,12 +693,18 @@
                 document.getElementById('pedido-en-ruta').classList.add('hidden');
                 document.getElementById('lista-pendientes').classList.remove('hidden');
                 
-                btn.disabled = false; btn.textContent = 'Completar Entrega';
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle"></i> Confirmar Entrega';
+                lucide.createIcons();
+                
+                // Recentrar al chofer después de entregar
+                if(miUbicacion) mapa.setView([miUbicacion.lat, miUbicacion.lng], 16);
+                
                 await cargarPedidos();
             } catch (error) {
-                btn.disabled = false; btn.textContent = 'Completar Entrega';
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle"></i> Confirmar Entrega';
+                lucide.createIcons();
                 const errEl = document.getElementById('error-venta');
-                errEl.textContent = 'Error al procesar: ' + error.message;
+                errEl.textContent = 'Fallo en transacción: ' + error.message;
                 errEl.style.display = 'block';
             }
         });
@@ -805,7 +727,7 @@
             document.getElementById('perfil-imagen').value = choferActual.imagen_url || '';
             
             const avatar = document.getElementById('avatar-preview');
-            avatar.style.backgroundImage = choferActual.imagen_url ? `url(${choferActual.imagen_url})` : `url('https://ui-avatars.com/api/?name=${encodeURIComponent(choferActual.nombre)}&background=0ea5e9&color=fff')`;
+            avatar.style.backgroundImage = choferActual.imagen_url ? `url(${choferActual.imagen_url})` : `url('https://ui-avatars.com/api/?name=${encodeURIComponent(choferActual.nombre)}&background=0f172a&color=0ea5e9')`;
         }
 
         document.getElementById('btn-guardar-perfil').addEventListener('click', async () => {
@@ -814,10 +736,11 @@
             const telefono = document.getElementById('perfil-telefono').value.trim();
             const imagen_url = document.getElementById('perfil-imagen').value.trim();
 
-            if (!nombre || !telefono) return alert('Nombre y teléfono son obligatorios.');
+            if (!nombre || !telefono) return alert('Revisar campos obligatorios.');
 
             const btn = document.getElementById('btn-guardar-perfil');
-            btn.disabled = true; btn.textContent = 'Guardando...';
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Procesando...';
+            lucide.createIcons();
 
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${choferActual.id}`, {
@@ -829,16 +752,21 @@
                 const actualizado = await res.json();
                 choferActual = actualizado[0];
                 
-                // Actualizar localStorage si cambia el teléfono
                 localStorage.setItem('choferTelefono', choferActual.telefono);
-                
                 document.getElementById('chofer-nombre').textContent = choferActual.nombre;
                 cargarPerfil();
-                alert('Perfil actualizado con éxito.');
+                
+                // Actualizar el ícono en el mapa en tiempo real
+                if (marcadorChofer) {
+                    marcadorChofer.setIcon(crearIconoChofer());
+                }
+                
+                alert('Información sincronizada exitosamente.');
             } catch (e) {
-                alert('Error al guardar: ' + e.message);
+                alert('Error de actualización: ' + e.message);
             } finally {
-                btn.disabled = false; btn.textContent = 'Actualizar Datos';
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="save"></i> Actualizar Datos';
+                lucide.createIcons();
             }
         });
     </script>
