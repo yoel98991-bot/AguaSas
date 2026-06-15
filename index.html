@@ -8,7 +8,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            /* Paleta minimalista y moderna */
             --bg-app: #09090b;
             --bg-card: #18181b;
             --bg-card-highlight: #27272a;
@@ -32,12 +31,14 @@
             color: var(--text-main);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            /* Dejar espacio para la consola flotante */
+            padding-bottom: 250px; 
         }
 
         .container {
             max-width: 480px;
             margin: 0 auto;
-            padding: 24px 20px 100px;
+            padding: 24px 20px 20px;
         }
 
         .header {
@@ -60,9 +61,7 @@
             letter-spacing: -0.5px;
         }
 
-        .logo i {
-            color: var(--primary-blue);
-        }
+        .logo i { color: var(--primary-blue); }
 
         .subtitle {
             color: var(--text-muted);
@@ -71,11 +70,7 @@
         }
 
         /* --- Setup Section --- */
-        .setup-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
+        .setup-wrapper { display: flex; flex-direction: column; gap: 24px; }
 
         .location-card {
             background: var(--bg-card);
@@ -86,301 +81,143 @@
         }
 
         .location-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 20px;
-            padding-top: 20px;
+            display: flex; align-items: center; gap: 16px;
+            margin-top: 20px; padding-top: 20px;
             border-top: 1px solid var(--border-color);
         }
 
-        .location-icon { 
-            color: var(--text-muted);
-            display: flex;
-        }
-
+        .location-icon { color: var(--text-muted); display: flex; }
         .location-text { flex: 1; }
-
-        .location-address {
-            font-weight: 500;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .location-coords {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
+        .location-address { font-weight: 500; font-size: 0.95rem; line-height: 1.4; }
+        .location-coords { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
         .input-group { margin-bottom: 8px; }
-
-        .input-label {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
+        .input-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
         .input {
-            width: 100%;
-            background: var(--bg-app);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-button);
-            padding: 14px 16px;
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: border-color 0.2s;
-            outline: none;
+            width: 100%; background: var(--bg-app); border: 1px solid var(--border-color);
+            border-radius: var(--radius-button); padding: 14px 16px; color: var(--text-main);
+            font-size: 1rem; transition: border-color 0.2s; outline: none;
         }
-
-        .input:focus {
-            border-color: var(--primary-blue);
-        }
+        .input:focus { border-color: var(--primary-blue); }
 
         /* --- Buttons --- */
         .btn {
-            background: var(--text-main);
-            color: var(--bg-app);
-            border: none;
-            border-radius: var(--radius-button);
-            padding: 16px 24px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            background: var(--text-main); color: var(--bg-app); border: none;
+            border-radius: var(--radius-button); padding: 16px 24px; font-weight: 600;
+            font-size: 0.95rem; cursor: pointer; width: 100%; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-
-        .btn:hover:not(:disabled) {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-primary {
-            background: var(--primary-blue);
-            color: #ffffff;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--primary-hover);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary { background: var(--primary-blue); color: #ffffff; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* --- App Section --- */
-        .catalog {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
+        .catalog { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
         .product-card {
-            background: var(--bg-app);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 20px 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: var(--bg-app); border: 1px solid var(--border-color);
+            border-radius: var(--radius-card); padding: 20px 16px; text-align: center;
+            cursor: pointer; transition: all 0.2s ease;
         }
-
-        .product-card.selected {
-            border-color: var(--primary-blue);
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .product-card.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .product-icon { 
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: center;
-        }
-        
-        .product-card.selected .product-icon {
-            color: var(--primary-blue);
-        }
-
-        .product-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin: 0 0 4px;
-        }
-
-        .product-price {
-            color: var(--text-main);
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .product-available {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 8px;
-        }
+        .product-card.selected { border-color: var(--primary-blue); background: rgba(59, 130, 246, 0.05); }
+        .product-card.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        .product-icon { color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: center; }
+        .product-card.selected .product-icon { color: var(--primary-blue); }
+        .product-name { font-weight: 600; font-size: 0.95rem; margin: 0 0 4px; }
+        .product-price { color: var(--text-main); font-weight: 700; font-size: 1.1rem; }
+        .product-available { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; }
 
         /* --- Orders & History --- */
         .order-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 24px;
-            margin-bottom: 24px;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-card); padding: 24px; margin-bottom: 24px;
         }
-
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--text-main);
-        }
-
+        .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-main); }
         .order-summary {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.95rem;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 0.95rem;
         }
-        
-        .order-summary:last-of-type {
-            border-bottom: none;
-            margin-bottom: 16px;
-        }
-
+        .order-summary:last-of-type { border-bottom: none; margin-bottom: 16px; }
         .qty-controls {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            background: var(--bg-app);
-            padding: 4px 12px;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 16px; background: var(--bg-app);
+            padding: 4px 12px; border-radius: var(--radius-pill); border: 1px solid var(--border-color);
         }
-
         .qty-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
+            background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem;
+            cursor: pointer; padding: 4px; display: flex; align-items: center;
         }
-
         .qty-btn:hover { color: var(--text-main); }
-
-        .total {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
+        .total { font-weight: 700; font-size: 1.1rem; }
+        
         .history-item {
-            background: var(--bg-app);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 16px;
-            margin-bottom: 12px;
+            background: var(--bg-app); border: 1px solid var(--border-color);
+            border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px;
         }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .history-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .history-title { font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
         .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: var(--radius-pill);
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            display: inline-flex; align-items: center; padding: 4px 10px; border-radius: var(--radius-pill);
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
         }
-
         .badge-pendiente { background: rgba(234,179,8,0.1); color: var(--warning-yellow); border: 1px solid rgba(234,179,8,0.2); }
         .badge-en_ruta { background: rgba(59,130,246,0.1); color: var(--primary-blue); border: 1px solid rgba(59,130,246,0.2); }
         .badge-completado { background: rgba(34,197,94,0.1); color: var(--success-green); border: 1px solid rgba(34,197,94,0.2); }
-
-        .history-details {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
+        .history-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); }
 
         /* --- Tabs --- */
         .tab-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: var(--bg-card);
-            padding: 6px;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--border-color);
+            display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-card);
+            padding: 6px; border-radius: var(--radius-pill); border: 1px solid var(--border-color);
         }
-
         .tab {
-            flex: 1;
-            padding: 10px;
-            border-radius: var(--radius-pill);
-            text-align: center;
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
+            flex: 1; padding: 10px; border-radius: var(--radius-pill); text-align: center;
+            font-weight: 500; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
         }
-
-        .tab.active {
-            background: var(--bg-card-highlight);
-            color: var(--text-main);
-        }
-
+        .tab.active { background: var(--bg-card-highlight); color: var(--text-main); }
         .view { display: none; animation: fadeIn 0.3s ease; }
         .view.active { display: block; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DEBUG CONSOLE (NUEVO) --- */
+        #debug-console {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 220px;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 2px solid #3b82f6;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            font-family: monospace;
+            font-size: 11px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
         }
+        #debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+            padding: 8px 12px;
+            color: #fff;
+            font-weight: bold;
+        }
+        #debug-logs {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            color: #4ade80; /* Texto verde terminal */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .log-error { color: #f87171 !important; }
+        .log-warn { color: #facc15 !important; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">
-                <i data-lucide="droplet"></i>
-                WaterApp
-            </div>
+            <div class="logo"><i data-lucide="droplet"></i> WaterApp</div>
             <div class="subtitle">Agua purificada a tu puerta</div>
         </div>
 
@@ -392,9 +229,7 @@
                         <input type="tel" class="input" id="telefono" placeholder="+54 11 1234-5678">
                     </div>
                     <div class="location-row">
-                        <div class="location-icon">
-                            <i data-lucide="map-pin"></i>
-                        </div>
+                        <div class="location-icon"><i data-lucide="map-pin"></i></div>
                         <div class="location-text">
                             <div class="location-address" id="direccion-text">Obteniendo ubicación...</div>
                             <div class="location-coords" id="coords-text">Por favor, espera</div>
@@ -448,11 +283,52 @@
         </div>
     </div>
 
+    <div id="debug-console">
+        <div id="debug-header">
+            <span>Terminal de Depuración</span>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="copyLogs()" style="background:#3b82f6; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-weight:bold;">Copiar Logs</button>
+                <button onclick="document.getElementById('debug-console').style.display='none'" style="background:#ef4444; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-weight:bold;">X</button>
+            </div>
+        </div>
+        <div id="debug-logs"></div>
+    </div>
+
     <script>
-        // Inicializar iconos de Lucide en la primera carga
+        // --- SISTEMA DE LOGS ---
+        function logger(msg, type = 'info') {
+            const logsBox = document.getElementById('debug-logs');
+            const line = document.createElement('div');
+            
+            let text = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg;
+            line.textContent = `[${new Date().toLocaleTimeString()}] > ${text}`;
+            
+            if(type === 'error') line.className = 'log-error';
+            if(type === 'warn') line.className = 'log-warn';
+            
+            logsBox.appendChild(line);
+            logsBox.scrollTop = logsBox.scrollHeight;
+        }
+
+        // Atrapar errores de la app completos
+        window.onerror = function(msg, url, line) {
+            logger(`CRITICAL ERROR: ${msg} en línea ${line}`, 'error');
+        };
+
+        function copyLogs() {
+            const text = document.getElementById('debug-logs').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('¡Código de error copiado al portapapeles!');
+            }).catch(err => {
+                logger('Fallo al copiar: ' + err, 'error');
+            });
+        }
+        
+        logger('Aplicación iniciada. Esperando acciones...');
+        // -------------------------
+
         lucide.createIcons();
 
-        // Configuración Supabase
         const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
 
@@ -469,10 +345,11 @@
         let cantidad = 1;
         let stockActualLitros = 0;
 
-        // Comprobar sesión al inicio
         function checkSession() {
+            logger('Revisando sesión guardada en LocalStorage...');
             const savedSession = localStorage.getItem('waterApp_session');
             if (savedSession) {
+                logger('Sesión encontrada. Cargando app directamente.');
                 const sessionData = JSON.parse(savedSession);
                 clienteActual = sessionData.clienteActual;
                 ubicacionActual = sessionData.ubicacionActual;
@@ -484,43 +361,53 @@
                 cargarProductos();
                 cargarHistorial();
             } else {
+                logger('No hay sesión. Solicitando ubicación.');
                 document.getElementById('setup-section').classList.add('active');
                 initLocation();
             }
         }
 
-        // Inicializar ubicación
         function initLocation() {
             if (navigator.geolocation) {
+                logger('Iniciando GPS...');
                 navigator.geolocation.getCurrentPosition(
                     async (pos) => {
                         ubicacionActual = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        logger(`Coordenadas obtenidas: ${ubicacionActual.lat}, ${ubicacionActual.lng}`);
                         document.getElementById('coords-text').textContent = `${ubicacionActual.lat.toFixed(6)}, ${ubicacionActual.lng.toFixed(6)}`;
                         try {
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${ubicacionActual.lat}&lon=${ubicacionActual.lng}`);
                             const data = await res.json();
                             direccionLegible = data.display_name || "Dirección no encontrada";
                             document.getElementById('direccion-text').textContent = direccionLegible;
+                            logger('Dirección procesada: ' + direccionLegible);
                         } catch (e) {
                             direccionLegible = "Sin dirección";
                             document.getElementById('direccion-text').textContent = direccionLegible;
+                            logger('Error en Reverse Geocoding: ' + e.message, 'warn');
                         }
                     },
                     (err) => {
+                        logger('Error GPS: ' + err.message, 'error');
                         alert("Necesitamos tu ubicación para continuar. Activa el GPS.");
                         document.getElementById('direccion-text').textContent = "Permiso denegado";
                     }
                 );
             } else {
-                alert("Tu dispositivo no soporta geolocalización.");
+                logger('Geolocalización no soportada.', 'error');
             }
         }
 
-        // Buscar o crear cliente
         async function encontrarOCrearCliente(telefono) {
+            logger(`Buscando cliente en BD con teléfono: ${telefono}`);
             const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?telefono=eq.${telefono}&select=*`, { headers });
             const clientes = await res.json();
-            if (clientes.length > 0) return clientes[0];
+            if (clientes.length > 0) {
+                logger('Cliente existente encontrado.');
+                return clientes[0];
+            }
+            
+            logger('Cliente no existe, creando uno nuevo...');
             const nuevo = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
                 method: 'POST',
                 headers: { ...headers, 'Prefer': 'return=representation' },
@@ -535,7 +422,6 @@
             return (await nuevo.json())[0];
         }
 
-        // Confirmar setup
         document.getElementById('btn-confirmar-ubicacion').addEventListener('click', async () => {
             const telefono = document.getElementById('telefono').value.trim();
             if (!telefono) return alert("Ingresá tu teléfono");
@@ -548,12 +434,10 @@
 
             try {
                 clienteActual = await encontrarOCrearCliente(telefono);
+                logger('Cliente validado en sistema. ID: ' + clienteActual.id);
                 
-                // Guardar en LocalStorage
                 localStorage.setItem('waterApp_session', JSON.stringify({
-                    clienteActual,
-                    ubicacionActual,
-                    direccionLegible
+                    clienteActual, ubicacionActual, direccionLegible
                 }));
 
                 document.getElementById('setup-section').classList.remove('active');
@@ -562,7 +446,8 @@
                 await cargarProductos();
                 cargarHistorial();
             } catch (e) {
-                alert("Error conectando al servidor: " + e.message);
+                logger('Error validando cliente: ' + e.message, 'error');
+                alert("Error conectando al servidor.");
             }
             
             btn.disabled = false; 
@@ -570,15 +455,18 @@
             lucide.createIcons();
         });
 
-        // Cargar productos y stock
         async function cargarProductos() {
+            logger('Consultando stock actual...');
             try {
                 const [stockRes] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=litros_disponibles&limit=1`, { headers }).then(r => r.json());
                 stockActualLitros = stockRes?.litros_disponibles || 0;
+                logger(`Stock disponible en sistema: ${stockActualLitros} Litros`);
             } catch (e) {
+                logger('Error obteniendo stock: ' + e.message, 'warn');
                 stockActualLitros = 0;
             }
 
+            logger('Cargando catálogo de productos...');
             const res = await fetch(`${SUPABASE_URL}/rest/v1/productos?select=*&order=id.asc`, { headers });
             const productos = await res.json();
 
@@ -589,9 +477,7 @@
                 const sinStock = disponibles <= 0;
                 return `
                     <div class="product-card ${sinStock ? 'disabled' : ''}" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-litros="${capacidad}">
-                        <div class="product-icon">
-                            <i data-lucide="package" style="width: 32px; height: 32px;"></i>
-                        </div>
+                        <div class="product-icon"><i data-lucide="package" style="width: 32px; height: 32px;"></i></div>
                         <div class="product-name">${p.nombre}</div>
                         <div class="product-price">$${p.precio}</div>
                         <div class="product-available">${capacidad}L • ${sinStock ? 'Agotado' : `${disponibles} disp.`}</div>
@@ -599,10 +485,8 @@
                 `;
             }).join('');
 
-            // Actualizar iconos dinámicos
             lucide.createIcons();
 
-            // Seleccionar producto
             document.querySelectorAll('.product-card:not(.disabled)').forEach(card => {
                 card.addEventListener('click', () => {
                     document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
@@ -616,6 +500,7 @@
                     cantidad = 1;
                     actualizarResumenPedido();
                     document.getElementById('order-summary').style.display = 'block';
+                    logger(`Producto seleccionado: ${productoSeleccionado.nombre}`);
                 });
             });
         }
@@ -630,11 +515,17 @@
         document.getElementById('btn-plus').addEventListener('click', () => { cantidad++; actualizarResumenPedido(); });
         document.getElementById('btn-minus').addEventListener('click', () => { if (cantidad > 1) cantidad--; actualizarResumenPedido(); });
 
-        // Realizar pedido
+        // --- LA FUNCION PROBLEMATICA CON REGISTROS AGREGADOS ---
         document.getElementById('btn-realizar-pedido').addEventListener('click', async () => {
-            if (!productoSeleccionado || !clienteActual) return;
+            if (!productoSeleccionado || !clienteActual) {
+                logger('Intento de pedido fallido: Faltan datos (producto o cliente).', 'error');
+                return;
+            }
+            
             const montoTotal = productoSeleccionado.precio * cantidad;
             const litrosADescontar = productoSeleccionado.capacidad_litros * cantidad;
+            
+            logger(`Iniciando creación de pedido... Monto: $${montoTotal}, Litros a descontar: ${litrosADescontar}`);
             
             const btn = document.getElementById('btn-realizar-pedido');
             btn.disabled = true;
@@ -642,25 +533,43 @@
             try {
                 if (litrosADescontar > 0 && litrosADescontar > stockActualLitros) {
                     btn.disabled = false;
+                    logger('Error: Stock insuficiente.', 'warn');
                     return alert('No hay suficiente agua en stock para este pedido.');
                 }
+
+                const payload = {
+                    cliente_id: clienteActual.id,
+                    producto_id: productoSeleccionado.id,
+                    lat: ubicacionActual.lat,
+                    lng: ubicacionActual.lng,
+                    monto: montoTotal,
+                    estado: 'pendiente'
+                };
+                
+                logger('Enviando datos a Supabase tabla [pedidos]:');
+                logger(payload);
 
                 const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
                     method: 'POST',
                     headers: { ...headers, 'Prefer': 'return=representation' },
-                    body: JSON.stringify({
-                        cliente_id: clienteActual.id,
-                        producto_id: productoSeleccionado.id,
-                        lat: ubicacionActual.lat,
-                        lng: ubicacionActual.lng,
-                        monto: montoTotal,
-                        estado: 'pendiente'
-                    })
+                    body: JSON.stringify(payload)
                 });
+                
+                logger('Código de estado HTTP de pedido: ' + pedidoRes.status);
+                
+                // Si la base de datos lanza un error 400 o 500, capturarlo
+                if (!pedidoRes.ok) {
+                    const errRes = await pedidoRes.text();
+                    throw new Error(`DB Error: ${errRes}`);
+                }
+
                 const nuevoPedido = await pedidoRes.json();
+                logger('Respuesta JSON de Supabase:');
+                logger(nuevoPedido);
 
                 if (nuevoPedido && nuevoPedido[0]) {
                     if (litrosADescontar > 0) {
+                        logger('Procediendo a descontar stock...');
                         const [stock] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=id,litros_disponibles&limit=1`, { headers }).then(r => r.json());
                         const nuevoStock = stock.litros_disponibles - litrosADescontar;
                         await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stock.id}`, {
@@ -669,6 +578,7 @@
                             body: JSON.stringify({ litros_disponibles: nuevoStock })
                         });
                         stockActualLitros = nuevoStock;
+                        logger('Stock descontado correctamente.');
                     }
 
                     alert("¡Pedido realizado con éxito!");
@@ -678,17 +588,18 @@
                     cargarProductos();
                     cargarHistorial();
                 } else {
-                    throw new Error("Respuesta inesperada");
+                    throw new Error("Respuesta de Supabase vacía o inesperada");
                 }
             } catch (e) {
-                alert("Error al crear el pedido: " + e.message);
+                logger('EXCEPCION CAPTURADA EN PEDIDO: ' + e.message, 'error');
+                alert("Error al crear el pedido, revisa la consola.");
             }
             btn.disabled = false;
         });
 
-        // Cargar historial
         async function cargarHistorial() {
             if (!clienteActual) return;
+            logger('Obteniendo historial de pedidos...');
             const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&select=id,productos(nombre),monto,estado,fecha_pedido&order=fecha_pedido.desc`, { headers });
             const pedidos = await res.json();
             const container = document.getElementById('historial-list');
@@ -722,11 +633,9 @@
                 `;
             }).join('');
             
-            // Actualizar iconos de historial
             lucide.createIcons();
         }
 
-        // Tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -737,7 +646,6 @@
             });
         });
 
-        // Iniciar flujo (Verificar sesión o pedir ubicación)
         checkSession();
     </script>
 </body>
