@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Water SaaS - Cliente</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         :root {
             --bg-app: #09090b;
@@ -31,67 +36,40 @@
             color: var(--text-main);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
-            /* Dejar espacio para la consola flotante */
             padding-bottom: 250px; 
         }
 
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 24px 20px 20px;
-        }
+        .container { max-width: 480px; margin: 0 auto; padding: 24px 20px 20px; }
 
         .header {
-            text-align: center;
-            margin-bottom: 40px;
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
+            text-align: center; margin-bottom: 40px; margin-top: 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: -0.5px;
+            font-size: 1.5rem; font-weight: 700; color: var(--text-main);
+            display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px;
         }
 
         .logo i { color: var(--primary-blue); }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 400;
-        }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; font-weight: 400; }
 
         /* --- Setup Section --- */
         .setup-wrapper { display: flex; flex-direction: column; gap: 24px; }
-
         .location-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 24px;
-            margin-bottom: 24px;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-card); padding: 24px; margin-bottom: 24px;
         }
-
         .location-row {
             display: flex; align-items: center; gap: 16px;
-            margin-top: 20px; padding-top: 20px;
-            border-top: 1px solid var(--border-color);
+            margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);
         }
-
         .location-icon { color: var(--text-muted); display: flex; }
         .location-text { flex: 1; }
         .location-address { font-weight: 500; font-size: 0.95rem; line-height: 1.4; }
         .location-coords { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
-        .input-group { margin-bottom: 8px; }
+        .input-group { margin-bottom: 16px; }
         .input-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
         .input {
             width: 100%; background: var(--bg-app); border: 1px solid var(--border-color);
@@ -142,10 +120,7 @@
             display: flex; align-items: center; gap: 16px; background: var(--bg-app);
             padding: 4px 12px; border-radius: var(--radius-pill); border: 1px solid var(--border-color);
         }
-        .qty-btn {
-            background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem;
-            cursor: pointer; padding: 4px; display: flex; align-items: center;
-        }
+        .qty-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 4px; display: flex; align-items: center; }
         .qty-btn:hover { color: var(--text-main); }
         .total { font-weight: 700; font-size: 1.1rem; }
         
@@ -171,7 +146,7 @@
         }
         .tab {
             flex: 1; padding: 10px; border-radius: var(--radius-pill); text-align: center;
-            font-weight: 500; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+            font-weight: 500; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
         }
         .tab.active { background: var(--bg-card-highlight); color: var(--text-main); }
         .view { display: none; animation: fadeIn 0.3s ease; }
@@ -179,37 +154,64 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- DEBUG CONSOLE --- */
-        #debug-console {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: 220px;
-            background: rgba(0, 0, 0, 0.95);
-            border-top: 2px solid #3b82f6;
-            z-index: 99999;
+        /* --- MAPA Y SEGUIMIENTO --- */
+        .tracking-container {
+            position: relative;
+            height: 350px;
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        #map { height: 100%; width: 100%; z-index: 1; }
+        
+        .map-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 10;
             display: flex;
             flex-direction: column;
-            font-family: monospace;
-            font-size: 11px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 0.3s;
+        }
+        
+        .map-overlay.hidden { display: none; }
+        
+        .driver-info {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Leaflet Dark Mode Tweaks */
+        .leaflet-layer,
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out,
+        .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        /* --- DEBUG CONSOLE --- */
+        #debug-console {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 220px;
+            background: rgba(0, 0, 0, 0.95); border-top: 2px solid #3b82f6;
+            z-index: 99999; display: flex; flex-direction: column;
+            font-family: monospace; font-size: 11px; box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
         }
         #debug-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #111;
-            padding: 8px 12px;
-            color: #fff;
-            font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #111; padding: 8px 12px; color: #fff; font-weight: bold;
         }
-        #debug-logs {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            color: #4ade80; /* Texto verde terminal */
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
+        #debug-logs { flex: 1; overflow-y: auto; padding: 10px; color: #4ade80; white-space: pre-wrap; word-wrap: break-word; }
         .log-error { color: #f87171 !important; }
         .log-warn { color: #facc15 !important; }
     </style>
@@ -224,6 +226,10 @@
         <div id="setup-section" class="view">
             <div class="setup-wrapper">
                 <div class="location-card">
+                    <div class="input-group">
+                        <label class="input-label">Tu Nombre</label>
+                        <input type="text" class="input" id="nombre" placeholder="Ej. Juan Pérez">
+                    </div>
                     <div class="input-group">
                         <label class="input-label">Número de teléfono</label>
                         <input type="tel" class="input" id="telefono" placeholder="+54 11 1234-5678">
@@ -244,8 +250,9 @@
 
         <div id="app-section" class="view">
             <div class="tab-bar">
-                <div class="tab active" data-tab="pedir">Nuevo Pedido</div>
-                <div class="tab" data-tab="historial">Mis Pedidos</div>
+                <div class="tab active" data-tab="pedir">Catálogo</div>
+                <div class="tab" data-tab="seguimiento">Seguimiento</div>
+                <div class="tab" data-tab="historial">Historial</div>
             </div>
 
             <div id="view-pedir" class="view active">
@@ -276,6 +283,37 @@
                 </div>
             </div>
 
+            <div id="view-seguimiento" class="view">
+                <div class="section-title">Estado de tu pedido</div>
+                <div id="tracking-content">
+                    <div style="text-align: center; padding: 40px 0; color: var(--text-muted);" id="no-active-order">
+                        <i data-lucide="map" style="width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
+                        <p>No tienes ningún pedido en curso.</p>
+                    </div>
+                    
+                    <div id="active-order-map" style="display: none;">
+                        <div class="tracking-container">
+                            <div id="map"></div>
+                            <div class="map-overlay" id="map-overlay">
+                                <i data-lucide="loader" class="spin" style="color: var(--primary-blue); width: 32px; height: 32px; margin-bottom: 16px;"></i>
+                                <h3 style="margin-bottom: 8px;">Esperando confirmación</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">Estamos asignando un repartidor a tu pedido. En breve verás la ruta.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="driver-info" id="driver-info" style="display: none;">
+                            <div style="background: rgba(59,130,246,0.1); padding: 12px; border-radius: 50%; color: var(--primary-blue);">
+                                <i data-lucide="truck" style="width: 24px; height: 24px;"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 4px;">Tu pedido está en ruta</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">El repartidor se dirige a tu ubicación.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="view-historial" class="view">
                 <div class="section-title">Historial de compras</div>
                 <div id="historial-list"></div>
@@ -299,13 +337,10 @@
         function logger(msg, type = 'info') {
             const logsBox = document.getElementById('debug-logs');
             const line = document.createElement('div');
-            
             let text = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg;
             line.textContent = `[${new Date().toLocaleTimeString()}] > ${text}`;
-            
             if(type === 'error') line.className = 'log-error';
             if(type === 'warn') line.className = 'log-warn';
-            
             logsBox.appendChild(line);
             logsBox.scrollTop = logsBox.scrollHeight;
         }
@@ -316,14 +351,8 @@
 
         function copyLogs() {
             const text = document.getElementById('debug-logs').innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('¡Código de error copiado al portapapeles!');
-            }).catch(err => {
-                logger('Fallo al copiar: ' + err, 'error');
-            });
+            navigator.clipboard.writeText(text).then(() => alert('¡Código copiado!')).catch(err => logger('Fallo al copiar: ' + err, 'error'));
         }
-        
-        logger('Aplicación iniciada. Esperando acciones...');
         // -------------------------
 
         lucide.createIcons();
@@ -343,16 +372,23 @@
         let productoSeleccionado = null;
         let cantidad = 1;
         let stockActualLitros = 0;
+        
+        // Variables del mapa
+        let mapaInstancia = null;
+        let rutaLinea = null;
+        let marcadorCliente = null;
+        let marcadorRepartidor = null;
+        let pedidoActivoInterval = null;
 
         function checkSession() {
-            logger('Revisando sesión guardada en LocalStorage...');
+            logger('Revisando sesión en LocalStorage...');
             const savedSession = localStorage.getItem('waterApp_session');
             if (savedSession) {
                 const sessionData = JSON.parse(savedSession);
                 
-                // NUEVO: Verificamos que el cliente y su ID realmente existan
+                // Validamos que exista cliente y tenga nombre
                 if (sessionData && sessionData.clienteActual && sessionData.clienteActual.id) {
-                    logger('Sesión válida encontrada. Cargando app directamente.');
+                    logger('Sesión válida encontrada.');
                     clienteActual = sessionData.clienteActual;
                     ubicacionActual = sessionData.ubicacionActual;
                     direccionLegible = sessionData.direccionLegible;
@@ -363,14 +399,13 @@
                     cargarProductos();
                     cargarHistorial();
                 } else {
-                    // Si los datos están corruptos, limpiamos y pedimos registro de nuevo
-                    logger('Sesión corrupta o incompleta. Borrando y pidiendo datos...', 'warn');
+                    logger('Sesión corrupta. Borrando...', 'warn');
                     localStorage.removeItem('waterApp_session');
                     document.getElementById('setup-section').classList.add('active');
                     initLocation();
                 }
             } else {
-                logger('No hay sesión. Solicitando ubicación.');
+                logger('No hay sesión. Mostrando registro.');
                 document.getElementById('setup-section').classList.add('active');
                 initLocation();
             }
@@ -382,46 +417,42 @@
                 navigator.geolocation.getCurrentPosition(
                     async (pos) => {
                         ubicacionActual = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        logger(`Coordenadas obtenidas: ${ubicacionActual.lat}, ${ubicacionActual.lng}`);
                         document.getElementById('coords-text').textContent = `${ubicacionActual.lat.toFixed(6)}, ${ubicacionActual.lng.toFixed(6)}`;
                         try {
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${ubicacionActual.lat}&lon=${ubicacionActual.lng}`);
                             const data = await res.json();
                             direccionLegible = data.display_name || "Dirección no encontrada";
                             document.getElementById('direccion-text').textContent = direccionLegible;
-                            logger('Dirección procesada: ' + direccionLegible);
                         } catch (e) {
                             direccionLegible = "Sin dirección";
                             document.getElementById('direccion-text').textContent = direccionLegible;
-                            logger('Error en Reverse Geocoding: ' + e.message, 'warn');
                         }
                     },
                     (err) => {
                         logger('Error GPS: ' + err.message, 'error');
-                        alert("Necesitamos tu ubicación para continuar. Activa el GPS.");
-                        document.getElementById('direccion-text').textContent = "Permiso denegado";
+                        alert("Necesitamos tu ubicación. Activa el GPS.");
                     }
                 );
-            } else {
-                logger('Geolocalización no soportada.', 'error');
             }
         }
 
-        async function encontrarOCrearCliente(telefono) {
-            logger(`Buscando cliente en BD con teléfono: ${telefono}`);
+        async function encontrarOCrearCliente(nombre, telefono) {
+            logger(`Buscando cliente con teléfono: ${telefono}`);
             const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?telefono=eq.${telefono}&select=*`, { headers });
             const clientes = await res.json();
+            
             if (clientes.length > 0) {
                 logger('Cliente existente encontrado.');
+                // Opcional: Actualizar nombre si cambió
                 return clientes[0];
             }
             
-            logger('Cliente no existe, creando uno nuevo...');
+            logger(`Creando nuevo cliente: ${nombre}`);
             const nuevo = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
                 method: 'POST',
                 headers: { ...headers, 'Prefer': 'return=representation' },
                 body: JSON.stringify({
-                    nombre: "Cliente App",
+                    nombre: nombre,
                     telefono: telefono,
                     direccion: direccionLegible,
                     lat: ubicacionActual.lat,
@@ -432,18 +463,20 @@
         }
 
         document.getElementById('btn-confirmar-ubicacion').addEventListener('click', async () => {
+            const nombre = document.getElementById('nombre').value.trim();
             const telefono = document.getElementById('telefono').value.trim();
+            
+            if (!nombre) return alert("Ingresá tu nombre");
             if (!telefono) return alert("Ingresá tu teléfono");
             if (!ubicacionActual) return alert("Esperá la ubicación...");
             
             const btn = document.getElementById('btn-confirmar-ubicacion');
-            btn.disabled = true; 
-            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Procesando...`;
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Procesando...`;
             lucide.createIcons();
 
             try {
-                clienteActual = await encontrarOCrearCliente(telefono);
-                logger('Cliente validado en sistema. ID: ' + clienteActual.id);
+                clienteActual = await encontrarOCrearCliente(nombre, telefono);
+                logger('Cliente validado. ID: ' + clienteActual.id);
                 
                 localStorage.setItem('waterApp_session', JSON.stringify({
                     clienteActual, ubicacionActual, direccionLegible
@@ -459,57 +492,43 @@
                 alert("Error conectando al servidor.");
             }
             
-            btn.disabled = false; 
-            btn.innerHTML = `Continuar <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>`;
+            btn.disabled = false; btn.innerHTML = `Continuar <i data-lucide="arrow-right" style="width: 18px;"></i>`;
             lucide.createIcons();
         });
 
+        // Catálogo y Pedido (Igual que antes)
         async function cargarProductos() {
-            logger('Consultando stock actual...');
             try {
                 const [stockRes] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=litros_disponibles&limit=1`, { headers }).then(r => r.json());
                 stockActualLitros = stockRes?.litros_disponibles || 0;
-                logger(`Stock disponible en sistema: ${stockActualLitros} Litros`);
-            } catch (e) {
-                logger('Error obteniendo stock: ' + e.message, 'warn');
-                stockActualLitros = 0;
-            }
+            } catch (e) { stockActualLitros = 0; }
 
-            logger('Cargando catálogo de productos...');
             const res = await fetch(`${SUPABASE_URL}/rest/v1/productos?select=*&order=id.asc`, { headers });
             const productos = await res.json();
 
             const catalog = document.getElementById('catalog');
             catalog.innerHTML = productos.map(p => {
-                const capacidad = p.capacidad_litros || 0;
-                const disponibles = capacidad > 0 ? Math.floor(stockActualLitros / capacidad) : 0;
-                const sinStock = disponibles <= 0;
+                const cap = p.capacidad_litros || 0;
+                const disp = cap > 0 ? Math.floor(stockActualLitros / cap) : 0;
+                const sinStock = disp <= 0;
                 return `
-                    <div class="product-card ${sinStock ? 'disabled' : ''}" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-litros="${capacidad}">
+                    <div class="product-card ${sinStock ? 'disabled' : ''}" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-litros="${cap}">
                         <div class="product-icon"><i data-lucide="package" style="width: 32px; height: 32px;"></i></div>
                         <div class="product-name">${p.nombre}</div>
                         <div class="product-price">$${p.precio}</div>
-                        <div class="product-available">${capacidad}L • ${sinStock ? 'Agotado' : `${disponibles} disp.`}</div>
+                        <div class="product-available">${cap}L • ${sinStock ? 'Agotado' : `${disp} disp.`}</div>
                     </div>
                 `;
             }).join('');
-
             lucide.createIcons();
 
             document.querySelectorAll('.product-card:not(.disabled)').forEach(card => {
                 card.addEventListener('click', () => {
                     document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
-                    productoSeleccionado = {
-                        id: card.dataset.id,
-                        nombre: card.dataset.nombre,
-                        precio: parseFloat(card.dataset.precio),
-                        capacidad_litros: parseInt(card.dataset.litros) || 0
-                    };
-                    cantidad = 1;
-                    actualizarResumenPedido();
+                    productoSeleccionado = { id: card.dataset.id, nombre: card.dataset.nombre, precio: parseFloat(card.dataset.precio), capacidad_litros: parseInt(card.dataset.litros) || 0 };
+                    cantidad = 1; actualizarResumenPedido();
                     document.getElementById('order-summary').style.display = 'block';
-                    logger(`Producto seleccionado: ${productoSeleccionado.nombre}`);
                 });
             });
         }
@@ -525,99 +544,53 @@
         document.getElementById('btn-minus').addEventListener('click', () => { if (cantidad > 1) cantidad--; actualizarResumenPedido(); });
 
         document.getElementById('btn-realizar-pedido').addEventListener('click', async () => {
-            if (!productoSeleccionado || !clienteActual) {
-                logger('Intento de pedido fallido: Faltan datos (producto o cliente).', 'error');
-                return;
-            }
-            
+            if (!productoSeleccionado || !clienteActual) return;
             const montoTotal = productoSeleccionado.precio * cantidad;
             const litrosADescontar = productoSeleccionado.capacidad_litros * cantidad;
-            
-            logger(`Iniciando creación de pedido... Monto: $${montoTotal}, Litros a descontar: ${litrosADescontar}`);
             
             const btn = document.getElementById('btn-realizar-pedido');
             btn.disabled = true;
 
             try {
                 if (litrosADescontar > 0 && litrosADescontar > stockActualLitros) {
-                    btn.disabled = false;
-                    logger('Error: Stock insuficiente.', 'warn');
-                    return alert('No hay suficiente agua en stock para este pedido.');
+                    btn.disabled = false; return alert('Stock insuficiente.');
                 }
 
-                const payload = {
-                    cliente_id: clienteActual.id,
-                    producto_id: productoSeleccionado.id,
-                    lat: ubicacionActual.lat,
-                    lng: ubicacionActual.lng,
-                    monto: montoTotal,
-                    estado: 'pendiente'
-                };
-                
-                logger('Enviando datos a Supabase tabla [pedidos]:');
-                logger(payload);
-
+                const payload = { cliente_id: clienteActual.id, producto_id: productoSeleccionado.id, lat: ubicacionActual.lat, lng: ubicacionActual.lng, monto: montoTotal, estado: 'pendiente' };
                 const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
-                    method: 'POST',
-                    headers: { ...headers, 'Prefer': 'return=representation' },
-                    body: JSON.stringify(payload)
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=representation' }, body: JSON.stringify(payload)
                 });
                 
-                logger('Código de estado HTTP de pedido: ' + pedidoRes.status);
-                
-                if (!pedidoRes.ok) {
-                    const errRes = await pedidoRes.text();
-                    throw new Error(`DB Error: ${errRes}`);
-                }
-
+                if (!pedidoRes.ok) throw new Error(await pedidoRes.text());
                 const nuevoPedido = await pedidoRes.json();
-                logger('Respuesta JSON de Supabase:');
-                logger(nuevoPedido);
 
                 if (nuevoPedido && nuevoPedido[0]) {
                     if (litrosADescontar > 0) {
-                        logger('Procediendo a descontar stock...');
                         const [stock] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=id,litros_disponibles&limit=1`, { headers }).then(r => r.json());
-                        const nuevoStock = stock.litros_disponibles - litrosADescontar;
-                        await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stock.id}`, {
-                            method: 'PATCH',
-                            headers: { ...headers, 'Prefer': 'return=minimal' },
-                            body: JSON.stringify({ litros_disponibles: nuevoStock })
-                        });
-                        stockActualLitros = nuevoStock;
-                        logger('Stock descontado correctamente.');
+                        await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stock.id}`, { method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' }, body: JSON.stringify({ litros_disponibles: stock.litros_disponibles - litrosADescontar }) });
                     }
-
-                    alert("¡Pedido realizado con éxito!");
-                    productoSeleccionado = null;
-                    document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+                    
+                    alert("¡Pedido realizado!");
                     document.getElementById('order-summary').style.display = 'none';
-                    cargarProductos();
-                    cargarHistorial();
-                } else {
-                    throw new Error("Respuesta de Supabase vacía o inesperada");
+                    cargarProductos(); cargarHistorial();
+                    
+                    // Automáticamente saltar a la pestaña de seguimiento
+                    document.querySelector('[data-tab="seguimiento"]').click();
                 }
             } catch (e) {
-                logger('EXCEPCION CAPTURADA EN PEDIDO: ' + e.message, 'error');
-                alert("Error al crear el pedido, revisa la consola.");
+                logger('ERROR PEDIDO: ' + e.message, 'error'); alert("Error al crear pedido.");
             }
             btn.disabled = false;
         });
 
         async function cargarHistorial() {
             if (!clienteActual) return;
-            logger('Obteniendo historial de pedidos...');
             const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&select=id,productos(nombre),monto,estado,fecha_pedido&order=fecha_pedido.desc`, { headers });
             const pedidos = await res.json();
             const container = document.getElementById('historial-list');
             
             if (pedidos.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
-                        <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
-                        <p>No tienes pedidos todavía.</p>
-                    </div>`;
-                lucide.createIcons();
+                container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--text-muted);"><p>Sin pedidos.</p></div>`;
                 return;
             }
             
@@ -626,30 +599,112 @@
                 return `
                     <div class="history-item">
                         <div class="history-header">
-                            <strong class="history-title">
-                                <i data-lucide="box" style="width: 16px;"></i>
-                                ${p.productos?.nombre || 'Producto'}
-                            </strong>
+                            <strong class="history-title"><i data-lucide="box" style="width: 16px;"></i> ${p.productos?.nombre || 'Producto'}</strong>
                             <span class="badge ${badgeClass}">${p.estado}</span>
                         </div>
                         <div class="history-details">
                             <span>${new Date(p.fecha_pedido).toLocaleDateString()}</span>
                             <span style="font-weight: 500; color: var(--text-main);">$${p.monto.toFixed(2)}</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
-            
             lucide.createIcons();
         }
 
+        // --- LÓGICA DEL MAPA Y SEGUIMIENTO ---
+        function inicializarMapa(lat, lng) {
+            if (!mapaInstancia) {
+                // Configuración inicial de Leaflet
+                mapaInstancia = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(mapaInstancia);
+
+                // Icono cliente
+                const clientIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+                marcadorCliente = L.marker([lat, lng], { icon: clientIcon }).addTo(mapaInstancia);
+            }
+        }
+
+        async function rastrearPedidoActivo() {
+            if (!clienteActual) return;
+            
+            try {
+                // Buscamos el pedido más reciente que NO esté completado ni cancelado
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&estado=in.(pendiente,en_ruta)&order=fecha_pedido.desc&limit=1`, { headers });
+                const pedidosActivos = await res.json();
+
+                if (pedidosActivos.length > 0) {
+                    const pedido = pedidosActivos[0];
+                    document.getElementById('no-active-order').style.display = 'none';
+                    document.getElementById('active-order-map').style.display = 'block';
+                    
+                    // Inicializamos el mapa en la ubicación del cliente
+                    inicializarMapa(ubicacionActual.lat, ubicacionActual.lng);
+                    setTimeout(() => mapaInstancia.invalidateSize(), 300); // Fix para mapas ocultos
+
+                    if (pedido.estado === 'pendiente') {
+                        document.getElementById('map-overlay').classList.remove('hidden');
+                        document.getElementById('driver-info').style.display = 'none';
+                        if(rutaLinea) mapaInstancia.removeLayer(rutaLinea);
+                        if(marcadorRepartidor) mapaInstancia.removeLayer(marcadorRepartidor);
+                    } 
+                    else if (pedido.estado === 'en_ruta') {
+                        document.getElementById('map-overlay').classList.add('hidden');
+                        document.getElementById('driver-info').style.display = 'flex';
+                        
+                        // --- SIMULACIÓN DEL REPARTIDOR ---
+                        // Inventamos unas coordenadas a ~1km de distancia del cliente
+                        const driverLat = ubicacionActual.lat + 0.005;
+                        const driverLng = ubicacionActual.lng + 0.005;
+
+                        // Icono repartidor
+                        if(!marcadorRepartidor) {
+                            const driverIcon = L.divIcon({ html: '🚚', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+                            marcadorRepartidor = L.marker([driverLat, driverLng], { icon: driverIcon }).addTo(mapaInstancia);
+                        }
+
+                        // Dibujar línea de ruta
+                        if(rutaLinea) mapaInstancia.removeLayer(rutaLinea);
+                        rutaLinea = L.polyline([
+                            [driverLat, driverLng], 
+                            [ubicacionActual.lat, ubicacionActual.lng]
+                        ], { color: '#3b82f6', weight: 4, dashArray: '10, 10' }).addTo(mapaInstancia);
+
+                        // Ajustar vista para que se vean ambos
+                        mapaInstancia.fitBounds(rutaLinea.getBounds(), { padding: [30, 30] });
+                    }
+                } else {
+                    // No hay pedidos activos
+                    document.getElementById('no-active-order').style.display = 'block';
+                    document.getElementById('active-order-map').style.display = 'none';
+                }
+            } catch(e) {
+                logger("Error rastreando pedido: " + e.message, "error");
+            }
+        }
+
+        // Cambio de Tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
+                
                 const tabName = tab.dataset.tab;
                 document.getElementById('view-pedir').classList.toggle('active', tabName === 'pedir');
+                document.getElementById('view-seguimiento').classList.toggle('active', tabName === 'seguimiento');
                 document.getElementById('view-historial').classList.toggle('active', tabName === 'historial');
+
+                // Si entramos a seguimiento, actualizamos el estado e iniciamos polling
+                if (tabName === 'seguimiento') {
+                    rastrearPedidoActivo();
+                    // Chequeamos la base de datos cada 5 segundos por si cambió a "en_ruta"
+                    if(pedidoActivoInterval) clearInterval(pedidoActivoInterval);
+                    pedidoActivoInterval = setInterval(rastrearPedidoActivo, 5000);
+                } else {
+                    // Detenemos el polling si salimos de la pestaña
+                    if(pedidoActivoInterval) clearInterval(pedidoActivoInterval);
+                }
             });
         });
 
