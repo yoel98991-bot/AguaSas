@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Water SaaS - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-app: #0A0F1E;
+            --bg-card: #151B2E;
+            --bg-card-highlight: #1E253A;
+            --primary-blue: #2D68FF;
+            --text-main: #FFFFFF;
+            --text-muted: #8A94A6;
+            --success-green: #22C55E;
+            --danger-red: #EF4444;
+            --warning-yellow: #EAB308;
+            --radius-container: 32px;
+            --radius-card: 20px;
+            --radius-button: 16px;
+            --radius-pill: 9999px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-app);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .main-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px 90px;
+            scrollbar-width: none;
+        }
+
+        .main-scroll::-webkit-scrollbar { display: none; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .greeting { font-size: 1.8rem; font-weight: 700; }
+
+        .notification-btn {
+            width: 44px; height: 44px;
+            background: var(--bg-card);
+            border-radius: var(--radius-button);
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(45,104,255,0.1);
+        }
+
+        .notification-dot {
+            width: 10px; height: 10px;
+            background: var(--danger-red);
+            border-radius: 50%;
+            position: absolute; top: 8px; right: 8px;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #1E253A 0%, #151B2E 100%);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(45,104,255,0.12);
+            border: 1px solid rgba(45,104,255,0.15);
+        }
+
+        .balance-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+        .balance-amount { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.5px; }
+
+        .trend-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+        .trend-badge {
+            background: rgba(34,197,94,0.15); color: var(--success-green);
+            font-size: 0.8rem; font-weight: 600;
+            padding: 4px 10px; border-radius: var(--radius-pill);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .trend-period { font-size: 0.75rem; color: var(--text-muted); }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .action-btn {
+            background: var(--bg-card);
+            border: none;
+            border-radius: var(--radius-button);
+            padding: 16px 8px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            color: var(--text-muted); font-size: 0.7rem; font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .action-btn.active { background: var(--primary-blue); color: white; box-shadow: 0 6px 16px rgba(45,104,255,0.4); }
+        .action-btn svg { width: 24px; height: 24px; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 1.2rem; font-weight: 600; }
+        .section-link { font-size: 0.8rem; color: var(--primary-blue); text-decoration: none; font-weight: 500; }
+
+        .order-item {
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .order-icon {
+            width: 44px; height: 44px;
+            border-radius: var(--radius-button);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .order-info { flex: 1; }
+        .order-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
+        .order-subtitle { font-size: 0.75rem; color: var(--text-muted); }
+        .order-amount { font-weight: 700; font-size: 1rem; }
+
+        .text-green { color: var(--success-green); }
+        .text-red { color: var(--danger-red); }
+
+        .view { display: none; }
+        .view.active { display: block; }
+
+        .table-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            overflow-x: auto;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        th {
+            text-align: left; padding: 12px 16px;
+            font-size: 0.7rem; color: var(--text-muted);
+            background: var(--bg-card-highlight);
+        }
+
+        td {
+            padding: 10px 16px; font-size: 0.8rem;
+            border-bottom: 1px solid rgba(138,148,166,0.1);
+        }
+
+        .badge {
+            padding: 4px 10px; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 600;
+        }
+
+        .badge-pendiente { background: rgba(234,179,8,0.2); color: var(--warning-yellow); }
+        .badge-en_ruta { background: rgba(45,104,255,0.2); color: var(--primary-blue); }
+        .badge-completado { background: rgba(34,197,94,0.2); color: var(--success-green); }
+
+        .form-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .input-group { margin-bottom: 12px; }
+        .input-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+        .input {
+            width: 100%; padding: 12px 16px;
+            background: var(--bg-card-highlight);
+            border: 1px solid rgba(138,148,166,0.2);
+            border-radius: var(--radius-button);
+            color: var(--text-main); font-size: 0.9rem;
+        }
+
+        .btn {
+            background: var(--primary-blue); color: white;
+            border: none; border-radius: var(--radius-button);
+            padding: 12px 24px; font-weight: 600;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(45,104,255,0.3);
+        }
+
+        .btn-danger { background: var(--danger-red); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 0.7rem; border-radius: 12px; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--bg-card);
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 12px 8px 20px;
+            border-top: 1px solid rgba(138,148,166,0.1);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            color: var(--text-muted); font-size: 0.65rem; font-weight: 500;
+            background: none; border: none; cursor: pointer;
+        }
+
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item svg { width: 24px; height: 24px; }
+
+        .fab {
+            width: 52px; height: 52px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-top: -30px;
+            box-shadow: 0 8px 20px rgba(45,104,255,0.6);
+        }
+
+        .fab svg { color: white; }
+    </style>
+</head>
+<body>
+    <div class="main-scroll" id="mainScroll">
+        <!-- Dashboard -->
+        <div id="view-dashboard" class="view active">
+            <div class="header">
+                <h1 class="greeting">Hola, Admin</h1>
+                <div class="notification-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    <span class="notification-dot"></span>
+                </div>
+            </div>
+
+            <div class="balance-card">
+                <div class="balance-label">Total Recaudado</div>
+                <div class="balance-amount" id="totalRecaudado">$0.00</div>
+                <div class="trend-row">
+                    <span class="trend-badge" id="trendBadge">▲ 0%</span>
+                    <span class="trend-period">Última Semana</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="action-btn" id="btnPendientes">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Pendientes
+                </button>
+                <button class="action-btn" id="btnEnRuta">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    En Ruta
+                </button>
+                <button class="action-btn" id="btnProductos">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                    Productos
+                </button>
+                <button class="action-btn" id="btnFinanzas">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Finanzas
+                </button>
+            </div>
+
+            <div class="section-header">
+                <h2 class="section-title">Últimos Pedidos</h2>
+                <a href="#" class="section-link" id="linkVerTodos">Ver Todos</a>
+            </div>
+            <div id="listaUltimosPedidos"></div>
+        </div>
+
+        <!-- Pendientes -->
+        <div id="view-pendientes" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Pedidos Pendientes</h1>
+            <div class="table-container" id="tablaPendientes"></div>
+        </div>
+
+        <!-- En Ruta -->
+        <div id="view-enruta" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Pedidos en Ruta</h1>
+            <div class="table-container" id="tablaEnRuta"></div>
+        </div>
+
+        <!-- Completados -->
+        <div id="view-completados" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Pedidos Completados</h1>
+            <div class="table-container" id="tablaCompletados"></div>
+        </div>
+
+        <!-- Finanzas -->
+        <div id="view-finanzas" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Finanzas</h1>
+            <div class="balance-card" style="margin-bottom:16px;">
+                <div class="balance-label">Recaudado Hoy</div>
+                <div class="balance-amount" id="finanzasHoy">$0</div>
+            </div>
+            <div class="table-container">
+                <h3 style="padding:16px;font-size:1rem;">Ventas de Hoy</h3>
+                <div id="tablaVentasHoy"></div>
+            </div>
+        </div>
+
+        <!-- Stock -->
+        <div id="view-stock" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Stock de Agua</h1>
+            <div class="balance-card" style="margin-bottom:24px;">
+                <div class="balance-label">Litros Disponibles</div>
+                <div class="balance-amount" id="stockLitros">0 L</div>
+            </div>
+            <div class="form-card">
+                <h3 style="margin-bottom:16px;">Cargar Litros al Stock</h3>
+                <div class="input-group">
+                    <label class="input-label">Cantidad de Litros</label>
+                    <input type="number" class="input" id="litros-agregar" placeholder="200" min="1">
+                </div>
+                <button class="btn" id="btn-agregar-stock">Agregar Litros</button>
+            </div>
+            <div class="form-card">
+                <h3 style="margin-bottom:16px;">Disponibilidad de Productos</h3>
+                <div class="table-container" id="tabla-disponibilidad"></div>
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div id="view-productos" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Inventario de Productos</h1>
+            <div class="form-card">
+                <h3 style="margin-bottom:16px;">Agregar Producto</h3>
+                <div class="input-group">
+                    <label class="input-label">Nombre</label>
+                    <input type="text" class="input" id="nombre-producto" placeholder="Ej: Bidón 20L">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Precio ($)</label>
+                    <input type="number" class="input" id="precio-producto" placeholder="5.00" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Capacidad (litros)</label>
+                    <input type="number" class="input" id="capacidad-producto" placeholder="20">
+                </div>
+                <button class="btn" id="btn-agregar-producto">Agregar Producto</button>
+            </div>
+            <div class="table-container">
+                <h3 style="padding:16px;font-size:1rem;">Productos Existentes</h3>
+                <div id="tabla-productos"></div>
+            </div>
+        </div>
+
+        <!-- Choferes -->
+        <div id="view-choferes" class="view">
+            <h1 class="greeting" style="margin-bottom:20px;">Gestión de Repartidores</h1>
+            <div class="form-card">
+                <h3 style="margin-bottom:16px;">Agregar Repartidor</h3>
+                <div class="input-group">
+                    <label class="input-label">Nombre</label>
+                    <input type="text" class="input" id="chofer-nombre" placeholder="Nombre del repartidor">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Teléfono</label>
+                    <input type="text" class="input" id="chofer-telefono" placeholder="Número de contacto">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Vehículo</label>
+                    <input type="text" class="input" id="chofer-vehiculo" placeholder="Ej: Moto">
+                </div>
+                <button class="btn" id="btn-agregar-chofer">Agregar Repartidor</button>
+            </div>
+            <div class="table-container">
+                <h3 style="padding:16px;font-size:1rem;">Repartidores Registrados</h3>
+                <div id="tabla-choferes"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-view="dashboard">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+            Inicio
+        </button>
+        <button class="nav-item" data-view="pendientes">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Pend.
+        </button>
+        <button class="nav-item" data-view="enruta">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Ruta
+        </button>
+        <button class="nav-item" data-view="completados">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Compl.
+        </button>
+        <button class="nav-item" id="fabScan">
+            <div class="fab">
+                <svg fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/></svg>
+            </div>
+        </button>
+        <button class="nav-item" data-view="finanzas">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            Finanzas
+        </button>
+        <button class="nav-item" data-view="stock">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Stock
+        </button>
+        <button class="nav-item" data-view="productos">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+            Prod.
+        </button>
+        <button class="nav-item" data-view="choferes">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Choferes
+        </button>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
+        const headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json"
+        };
+
+        // Cliente Supabase para Real Time
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Canales de suscripción (los guardamos para poder cancelarlos al cambiar de vista)
+        let activeChannels = [];
+
+        function unsubscribeAll() {
+            activeChannels.forEach(channel => supabaseClient.removeChannel(channel));
+            activeChannels = [];
+        }
+
+        // Helpers
+        async function fetchSupabase(endpoint, options = {}) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, { headers: { ...headers, ...options.headers }, ...options });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        }
+
+        function hoyISO() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function renderTable(containerId, columns, data, emptyMessage = "No hay datos.") {
+            const container = document.getElementById(containerId);
+            if (!data || data.length === 0) {
+                container.innerHTML = `<div style="padding:20px;color:var(--text-muted)">${emptyMessage}</div>`;
+                return;
+            }
+            let html = `<table><thead><tr>${columns.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+            data.forEach(row => {
+                html += '<tr>';
+                columns.forEach((_, i) => { html += `<td>${row[i] !== undefined ? row[i] : '-'}</td>`; });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Dashboard (con suscripción a ventas y pedidos)
+        async function cargarDashboard() {
+            const fechaHoy = hoyISO();
+            const [pendientes, completadosHoy, ventasHoy, clientes] = await Promise.all([
+                fetchSupabase(`pedidos?select=id&estado=eq.pendiente`),
+                fetchSupabase(`pedidos?select=id&estado=eq.completado&fecha_entrega=gte.${fechaHoy}T03:00:00`),
+                fetchSupabase(`ventas?select=monto_final&fecha_completado=gte.${fechaHoy}T03:00:00`),
+                fetchSupabase(`clientes?select=id`)
+            ]);
+            document.getElementById('totalRecaudado').textContent = `$${ventasHoy.reduce((s,v)=>s+parseFloat(v.monto_final),0).toFixed(2)}`;
+
+            const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
+            const ayerISO = `${ayer.getFullYear()}-${String(ayer.getMonth()+1).padStart(2,'0')}-${String(ayer.getDate()).padStart(2,'0')}`;
+            const ventasAyer = await fetchSupabase(`ventas?select=monto_final&fecha_completado=gte.${ayerISO}T03:00:00&fecha_completado=lt.${fechaHoy}T03:00:00`);
+            const totalAyer = ventasAyer.reduce((s,v)=>s+parseFloat(v.monto_final),0);
+            const totalHoy = ventasHoy.reduce((s,v)=>s+parseFloat(v.monto_final),0);
+            const diff = totalHoy - totalAyer;
+            const pct = totalAyer ? ((diff/totalAyer)*100).toFixed(1) : 0;
+            const trendEl = document.getElementById('trendBadge');
+            if (diff >= 0) {
+                trendEl.innerHTML = `▲ ${pct}%`;
+                trendEl.style.background = 'rgba(34,197,94,0.15)'; trendEl.style.color = '#22C55E';
+            } else {
+                trendEl.innerHTML = `▼ ${Math.abs(pct)}%`;
+                trendEl.style.background = 'rgba(239,68,68,0.15)'; trendEl.style.color = '#EF4444';
+            }
+
+            const ultimos = await fetchSupabase(`pedidos?select=id,clientes(nombre),productos(nombre),monto,fecha_pedido&estado=eq.pendiente&order=fecha_pedido.desc&limit=3`);
+            const container = document.getElementById('listaUltimosPedidos');
+            container.innerHTML = ultimos.length ? ultimos.map(p => `
+                <div class="order-item">
+                    <div class="order-icon" style="background:rgba(45,104,255,0.2);">💧</div>
+                    <div class="order-info">
+                        <div class="order-title">${p.productos?.nombre || 'Pedido'} - ${p.clientes?.nombre || 'Cliente'}</div>
+                        <div class="order-subtitle">${new Date(p.fecha_pedido).toLocaleString()}</div>
+                    </div>
+                    <div class="order-amount text-green">$${p.monto}</div>
+                </div>
+            `).join('') : '<p style="color:var(--text-muted);padding:16px;">No hay pedidos pendientes.</p>';
+        }
+
+        // Suscripciones para cada vista
+        function subscribeToView(viewId) {
+            unsubscribeAll();
+            if (viewId === 'dashboard') {
+                const channel = supabaseClient
+                    .channel('dashboard-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => cargarDashboard())
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, () => cargarDashboard())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'pendientes') {
+                const channel = supabaseClient
+                    .channel('pendientes-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => cargarPendientes())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'enruta') {
+                const channel = supabaseClient
+                    .channel('enruta-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => cargarEnRuta())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'completados') {
+                const channel = supabaseClient
+                    .channel('completados-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => cargarCompletados())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'finanzas') {
+                const channel = supabaseClient
+                    .channel('finanzas-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, () => cargarFinanzas())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'stock') {
+                const channel = supabaseClient
+                    .channel('stock-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_agua' }, () => cargarStock())
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'productos' }, () => cargarStock())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'productos') {
+                const channel = supabaseClient
+                    .channel('productos-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'productos' }, () => cargarProductos())
+                    .subscribe();
+                activeChannels.push(channel);
+            } else if (viewId === 'choferes') {
+                const channel = supabaseClient
+                    .channel('choferes-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'choferes' }, () => cargarChoferes())
+                    .subscribe();
+                activeChannels.push(channel);
+            }
+        }
+
+        // Pendientes
+        async function cargarPendientes() {
+            const pedidos = await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion,telefono),productos(nombre),monto,numero_recarga,estado,fecha_pedido&estado=eq.pendiente&order=fecha_pedido.asc`);
+            const data = pedidos.map(p => [
+                p.id, p.clientes?.nombre||'-', p.clientes?.direccion||'-', p.clientes?.telefono||'-', p.productos?.nombre||'-',
+                `$${p.monto}`, p.numero_recarga||'-', `<span class="badge badge-pendiente">${p.estado}</span>`,
+                new Date(p.fecha_pedido).toLocaleString()
+            ]);
+            renderTable('tablaPendientes', ['ID','Cliente','Dirección','Tel','Producto','Monto','Recarga','Estado','Fecha'], data, 'No hay pedidos pendientes.');
+        }
+
+        // En Ruta
+        async function cargarEnRuta() {
+            const pedidos = await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion),choferes(nombre),productos(nombre),monto,fecha_pedido&estado=eq.en_ruta&order=fecha_pedido.asc`);
+            const data = pedidos.map(p => [
+                p.id, p.clientes?.nombre||'-', p.clientes?.direccion||'-', p.choferes?.nombre||'-', p.productos?.nombre||'-',
+                `$${p.monto}`, `<span class="badge badge-en_ruta">en ruta</span>`,
+                new Date(p.fecha_pedido).toLocaleString()
+            ]);
+            renderTable('tablaEnRuta', ['ID','Cliente','Dirección','Repartidor','Producto','Monto','Estado','Fecha'], data, 'No hay pedidos en ruta.');
+        }
+
+        // Completados
+        async function cargarCompletados() {
+            const pedidos = await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion),productos(nombre),monto,estado,fecha_entrega&estado=eq.completado&order=fecha_entrega.desc&limit=20`);
+            const data = pedidos.map(p => [
+                p.id, p.clientes?.nombre||'-', p.clientes?.direccion||'-', p.productos?.nombre||'-', `$${p.monto}`,
+                `<span class="badge badge-completado">${p.estado}</span>`,
+                p.fecha_entrega ? new Date(p.fecha_entrega).toLocaleString() : '-'
+            ]);
+            renderTable('tablaCompletados', ['ID','Cliente','Dirección','Producto','Monto','Estado','Entregado'], data, 'No hay completados recientes.');
+        }
+
+        // Finanzas
+        async function cargarFinanzas() {
+            const fechaHoy = hoyISO();
+            const ventas = await fetchSupabase(`ventas?select=monto_final,metodo_pago,clientes(nombre),fecha_completado&fecha_completado=gte.${fechaHoy}T03:00:00&order=fecha_completado.desc`);
+            const total = ventas.reduce((s,v)=>s+parseFloat(v.monto_final),0);
+            document.getElementById('finanzasHoy').textContent = `$${total.toFixed(2)}`;
+            const data = ventas.map((v,i) => [i+1, v.clientes?.nombre||'-', `$${v.monto_final}`, v.metodo_pago, new Date(v.fecha_completado).toLocaleString()]);
+            renderTable('tablaVentasHoy', ['#','Cliente','Monto','Método','Hora'], data, 'Sin ventas hoy.');
+        }
+
+        // Stock
+        async function cargarStock() {
+            const [stockRes] = await fetchSupabase(`stock_agua?select=litros_disponibles&limit=1`);
+            const litros = stockRes?.litros_disponibles || 0;
+            document.getElementById('stockLitros').textContent = `${litros} L`;
+            const productos = await fetchSupabase(`productos?select=nombre,capacidad_litros,precio&order=nombre.asc`);
+            const data = productos.map(p => {
+                const cant = p.capacidad_litros > 0 ? Math.floor(litros / p.capacidad_litros) : 'N/A';
+                return [p.nombre, `${p.capacidad_litros} L`, `$${p.precio}`, cant];
+            });
+            renderTable('tabla-disponibilidad', ['Producto', 'Litros/Und', 'Precio', 'Disponibles'], data, 'No hay productos definidos.');
+        }
+
+        async function agregarLitros() {
+            const litrosAgregar = parseFloat(document.getElementById('litros-agregar').value);
+            if (!litrosAgregar || litrosAgregar <= 0) return alert('Ingresá una cantidad válida');
+            const [stockActual] = await fetchSupabase(`stock_agua?select=id,litros_disponibles&limit=1`);
+            const nuevoTotal = (stockActual?.litros_disponibles || 0) + litrosAgregar;
+            if (stockActual) {
+                await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stockActual.id}`, {
+                    method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ litros_disponibles: nuevoTotal })
+                });
+            } else {
+                await fetch(`${SUPABASE_URL}/rest/v1/stock_agua`, {
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ litros_disponibles: litrosAgregar })
+                });
+            }
+            document.getElementById('litros-agregar').value = '';
+            cargarStock();
+        }
+
+        // Productos
+        async function cargarProductos() {
+            const productos = await fetchSupabase(`productos?select=*&order=id.asc`);
+            const data = productos.map(p => [
+                p.id, p.nombre, `$${p.precio}`, `${p.capacidad_litros} L`,
+                `<button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id})">Eliminar</button>`
+            ]);
+            renderTable('tabla-productos', ['ID','Nombre','Precio','Litros','Acciones'], data, 'No hay productos todavía.');
+        }
+
+        async function agregarProducto() {
+            const nombre = document.getElementById('nombre-producto').value.trim();
+            const precio = parseFloat(document.getElementById('precio-producto').value);
+            const capacidad = parseInt(document.getElementById('capacidad-producto').value) || null;
+            if (!nombre || isNaN(precio)) return alert('Completá nombre y precio');
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/productos`, {
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ nombre, precio, capacidad_litros: capacidad })
+                });
+                document.getElementById('nombre-producto').value = '';
+                document.getElementById('precio-producto').value = '';
+                document.getElementById('capacidad-producto').value = '';
+                cargarProductos();
+                cargarStock();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        window.eliminarProducto = async function(id) {
+            if (!confirm('¿Eliminar producto?')) return;
+            await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`, { method: 'DELETE', headers });
+            cargarProductos();
+            cargarStock();
+        }
+
+        // Choferes
+        async function cargarChoferes() {
+            const choferes = await fetchSupabase(`choferes?select=*&order=id.asc`);
+            const data = choferes.map(c => [
+                c.id, c.nombre, c.telefono, c.vehiculo || '-',
+                c.activo ? '✅' : '❌',
+                `<button class="btn btn-danger btn-sm" onclick="eliminarChofer(${c.id})">Eliminar</button>`
+            ]);
+            renderTable('tabla-choferes', ['ID','Nombre','Teléfono','Vehículo','Activo','Acciones'], data, 'No hay repartidores registrados.');
+        }
+
+        async function agregarChofer() {
+            const nombre = document.getElementById('chofer-nombre').value.trim();
+            const telefono = document.getElementById('chofer-telefono').value.trim();
+            const vehiculo = document.getElementById('chofer-vehiculo').value.trim();
+            if (!nombre || !telefono) return alert('Completá nombre y teléfono');
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/choferes`, {
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ nombre, telefono, vehiculo })
+                });
+                document.getElementById('chofer-nombre').value = '';
+                document.getElementById('chofer-telefono').value = '';
+                document.getElementById('chofer-vehiculo').value = '';
+                cargarChoferes();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        window.eliminarChofer = async function(id) {
+            if (!confirm('¿Eliminar repartidor?')) return;
+            await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${id}`, { method: 'DELETE', headers });
+            cargarChoferes();
+        }
+
+        // Navegación con suscripciones
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelector(`.nav-item[data-view="${viewId}"]`)?.classList.add('active');
+
+            // Cargar datos iniciales
+            if (viewId === 'dashboard') cargarDashboard();
+            else if (viewId === 'pendientes') cargarPendientes();
+            else if (viewId === 'enruta') cargarEnRuta();
+            else if (viewId === 'completados') cargarCompletados();
+            else if (viewId === 'finanzas') cargarFinanzas();
+            else if (viewId === 'stock') cargarStock();
+            else if (viewId === 'productos') cargarProductos();
+            else if (viewId === 'choferes') cargarChoferes();
+
+            // Suscribirse a cambios en tiempo real para esa vista
+            subscribeToView(viewId);
+        }
+
+        document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.preventDefault(); showView(btn.dataset.view); });
+        });
+
+        document.getElementById('btnPendientes').addEventListener('click', () => showView('pendientes'));
+        document.getElementById('btnEnRuta').addEventListener('click', () => showView('enruta'));
+        document.getElementById('btnFinanzas').addEventListener('click', () => showView('finanzas'));
+        document.getElementById('btnProductos').addEventListener('click', () => showView('productos'));
+        document.getElementById('fabScan').addEventListener('click', () => alert('Escáner próximamente'));
+        document.getElementById('linkVerTodos').addEventListener('click', (e) => { e.preventDefault(); showView('pendientes'); });
+        document.getElementById('btn-agregar-producto').addEventListener('click', agregarProducto);
+        document.getElementById('btn-agregar-stock').addEventListener('click', agregarLitros);
+        document.getElementById('btn-agregar-chofer').addEventListener('click', agregarChofer);
+
+        cargarDashboard();
+        subscribeToView('dashboard');
+    </script>
+</body>
+</html>
