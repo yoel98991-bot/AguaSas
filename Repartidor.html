@@ -20,29 +20,27 @@
             --danger-red: #ef4444;
             --radius-card: 16px;
             --radius-button: 12px;
+            --radius-pill: 9999px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg-app);
             color: var(--text-main);
-            padding: 20px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        .container { max-width: 600px; margin: 0 auto; width: 100%; }
-        h1 { font-size: 1.5rem; margin-bottom: 8px; }
-        .subtitle { color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem; }
+        .container { max-width: 600px; margin: 0 auto; width: 100%; padding: 20px; flex: 1; }
 
-        .login-card, .work-card {
+        .login-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
             padding: 20px;
             margin-bottom: 20px;
         }
-        .login-card input, .work-card input {
+        .login-card input {
             width: 100%;
             background: transparent;
             border: 1px solid var(--border-color);
@@ -50,6 +48,7 @@
             padding: 12px 14px;
             color: var(--text-main);
             font-size: 1rem;
+            margin-top: 8px;
         }
         .btn {
             background: var(--primary-blue);
@@ -128,14 +127,62 @@
         }
         .current-order h3 { margin-bottom: 12px; }
         .current-order p { margin-bottom: 6px; }
-        .current-order button { margin-top: 12px; }
+
+        /* Pestañas */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-card);
+            border-radius: var(--radius-pill);
+            text-align: center;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .tab.active { background: var(--primary-blue); color: white; }
+
+        /* Perfil */
+        .profile-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 20px;
+        }
+        .avatar-preview {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: var(--bg-card-highlight, #1E253A);
+            margin: 0 auto 16px;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--primary-blue);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-button);
+            color: var(--text-main);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📦 WaterApp Repartidor</h1>
-        <p class="subtitle">Pedidos asignados por cercanía</p>
-
         <!-- Login -->
         <div id="login-section" class="login-card">
             <label>Tu teléfono (registrado en el sistema)</label>
@@ -151,22 +198,51 @@
                 <button class="btn btn-danger" id="btn-salir">Salir</button>
             </div>
 
-            <div id="map"></div>
-
-            <!-- Pedido en curso -->
-            <div id="pedido-en-ruta" class="current-order hidden">
-                <h3>🚚 Pedido en curso</h3>
-                <p><strong>Cliente:</strong> <span id="ruta-cliente"></span></p>
-                <p><strong>Dirección:</strong> <span id="ruta-direccion"></span></p>
-                <p><strong>Teléfono:</strong> <span id="ruta-telefono"></span></p>
-                <p><strong>Monto:</strong> $<span id="ruta-monto"></span></p>
-                <button class="btn btn-success" id="btn-entregar">Entregar Pedido</button>
-                <p id="error-venta" style="color: #ef4444; font-size: 0.8rem; margin-top: 8px; display: none;"></p>
+            <!-- Pestañas -->
+            <div class="tabs">
+                <div class="tab active" data-tab="ruta">📍 Ruta</div>
+                <div class="tab" data-tab="perfil">👤 Perfil</div>
             </div>
 
-            <!-- Lista de pendientes -->
-            <div id="lista-pendientes" class="order-list">
-                <p style="text-align: center; color: var(--text-muted);">Cargando pedidos...</p>
+            <!-- Contenido de Ruta -->
+            <div id="tab-ruta" class="tab-content">
+                <div id="map"></div>
+
+                <!-- Pedido en curso -->
+                <div id="pedido-en-ruta" class="current-order hidden">
+                    <h3>🚚 Pedido en curso</h3>
+                    <p><strong>Cliente:</strong> <span id="ruta-cliente"></span></p>
+                    <p><strong>Dirección:</strong> <span id="ruta-direccion"></span></p>
+                    <p><strong>Teléfono:</strong> <span id="ruta-telefono"></span></p>
+                    <p><strong>Monto:</strong> $<span id="ruta-monto"></span></p>
+                    <button class="btn btn-success" id="btn-entregar">Entregar Pedido</button>
+                    <p id="error-venta" style="color: #ef4444; font-size: 0.8rem; margin-top: 8px; display: none;"></p>
+                </div>
+
+                <!-- Lista de pendientes -->
+                <div id="lista-pendientes" class="order-list">
+                    <p style="text-align: center; color: var(--text-muted);">Cargando pedidos...</p>
+                </div>
+            </div>
+
+            <!-- Contenido de Perfil -->
+            <div id="tab-perfil" class="tab-content hidden">
+                <div class="profile-section">
+                    <div class="avatar-preview" id="avatar-preview" style="background-image: url('https://via.placeholder.com/80');"></div>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="perfil-nombre" placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="perfil-telefono" placeholder="Tu teléfono">
+                    </div>
+                    <div class="form-group">
+                        <label>URL de imagen (opcional)</label>
+                        <input type="url" id="perfil-imagen" placeholder="https://ejemplo.com/foto.jpg">
+                    </div>
+                    <button class="btn" id="btn-guardar-perfil">Guardar cambios</button>
+                </div>
             </div>
         </div>
     </div>
@@ -187,6 +263,7 @@
         let marcadorChofer = null;
         let marcadorCliente = null;
         let miUbicacion = null;
+        let miHeading = 0; // orientación actual
         let envioUbicacionInterval = null;
         let pedidoEnRuta = null;
         let canalesActivos = [];
@@ -196,6 +273,25 @@
             canalesActivos = [];
         }
 
+        // ----- NAVEGACIÓN POR PESTAÑAS -----
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const tabId = tab.dataset.tab;
+                document.getElementById('tab-ruta').classList.toggle('hidden', tabId !== 'ruta');
+                document.getElementById('tab-perfil').classList.toggle('hidden', tabId !== 'perfil');
+
+                if (tabId === 'ruta') {
+                    if (mapa) mapa.invalidateSize();
+                    cargarPedidos();
+                } else if (tabId === 'perfil') {
+                    cargarPerfil();
+                }
+            });
+        });
+
+        // ----- LOGIN -----
         document.getElementById('btn-ingresar').addEventListener('click', async () => {
             const telefono = document.getElementById('telefonoChofer').value.trim();
             if (!telefono) {
@@ -241,32 +337,76 @@
         });
 
         async function iniciarApp() {
-            try {
-                miUbicacion = await getCurrentPosition();
-                initMap(miUbicacion.lat, miUbicacion.lng);
-            } catch (e) {
-                alert('Activa el GPS para usar esta app.');
-                initMap(-34.61, -58.37);
+            // Activar GPS continuo para obtener ubicación y rumbo
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (pos) => {
+                        miUbicacion = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        miHeading = pos.coords.heading || 0; // grados (0 = norte)
+                        actualizarMarcadorChofer();
+                    },
+                    (err) => console.warn('Error GPS:', err),
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                alert('GPS no disponible');
             }
+            // Iniciar mapa con ubicación inicial (aproximada)
+            if (!miUbicacion) {
+                miUbicacion = await getCurrentPosition();
+            }
+            initMap(miUbicacion.lat, miUbicacion.lng);
             await recuperarPedidoEnRuta();
             await cargarPedidos();
-            // Suscripción a nuevos pedidos pendientes
             subscribePendientes();
         }
 
         function initMap(lat, lng) {
             if (mapa) return;
-            mapa = L.map('map', { zoomControl: false }).setView([lat, lng], 14);
+            mapa = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap'
             }).addTo(mapa);
+            // Crear marcador del chofer con flecha orientable
+            const arrowIcon = L.divIcon({
+                html: '<div style="font-size: 28px; line-height: 1; transform-origin: center; transition: transform 0.3s;">▶</div>',
+                className: '',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+            marcadorChofer = L.marker([lat, lng], { icon: arrowIcon }).addTo(mapa);
+            // Actualizar rotación inicial
+            actualizarRotacionFlecha();
+        }
+
+        function actualizarRotacionFlecha() {
+            if (!marcadorChofer) return;
+            const icon = marcadorChofer.getElement();
+            if (!icon) return;
+            const flecha = icon.querySelector('div');
+            if (flecha) {
+                flecha.style.transform = `rotate(${miHeading}deg)`;
+            }
+        }
+
+        function actualizarMarcadorChofer() {
+            if (!marcadorChofer || !miUbicacion) return;
+            marcadorChofer.setLatLng([miUbicacion.lat, miUbicacion.lng]);
+            actualizarRotacionFlecha();
+            // Centrar mapa en el chofer si no está siguiendo una ruta activa
+            if (!pedidoEnRuta) {
+                mapa.setView([miUbicacion.lat, miUbicacion.lng], mapa.getZoom());
+            }
         }
 
         function getCurrentPosition() {
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) reject('GPS no soportado');
                 navigator.geolocation.getCurrentPosition(
-                    pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    pos => {
+                        miHeading = pos.coords.heading || 0;
+                        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    },
                     err => reject(err),
                     { enableHighAccuracy: true }
                 );
@@ -292,27 +432,30 @@
                         cliente_direccion: cliente.direccion,
                         cliente_telefono: cliente.telefono
                     };
-                    document.getElementById('ruta-cliente').textContent = cliente.nombre || '-';
-                    document.getElementById('ruta-direccion').textContent = cliente.direccion || '-';
-                    document.getElementById('ruta-telefono').textContent = cliente.telefono || '-';
-                    document.getElementById('ruta-monto').textContent = p.monto;
-                    document.getElementById('pedido-en-ruta').classList.remove('hidden');
-                    document.getElementById('lista-pendientes').classList.add('hidden');
-
-                    if (marcadorCliente) mapa.removeLayer(marcadorCliente);
-                    const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
-                    marcadorCliente = L.marker([p.lat, p.lng], { icon: clienteIcon }).addTo(mapa);
-                    if (miUbicacion) {
-                        const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [p.lat, p.lng]]);
-                        mapa.fitBounds(bounds, { padding: [30, 30] });
-                    }
-
-                    if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
-                    envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
+                    mostrarPedidoEnCurso();
                 }
             } catch (error) {
                 console.error('Error al recuperar pedido en ruta:', error);
             }
+        }
+
+        function mostrarPedidoEnCurso() {
+            document.getElementById('ruta-cliente').textContent = pedidoEnRuta.cliente_nombre || '-';
+            document.getElementById('ruta-direccion').textContent = pedidoEnRuta.cliente_direccion || '-';
+            document.getElementById('ruta-telefono').textContent = pedidoEnRuta.cliente_telefono || '-';
+            document.getElementById('ruta-monto').textContent = pedidoEnRuta.monto;
+            document.getElementById('pedido-en-ruta').classList.remove('hidden');
+            document.getElementById('lista-pendientes').classList.add('hidden');
+
+            if (marcadorCliente) mapa.removeLayer(marcadorCliente);
+            const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+            marcadorCliente = L.marker([pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente], { icon: clienteIcon }).addTo(mapa);
+            const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente]]);
+            mapa.fitBounds(bounds, { padding: [30, 30] });
+
+            if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
+            envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
+            enviarUbicacion();
         }
 
         function subscribePendientes() {
@@ -367,11 +510,6 @@
                         </div>
                     `;
                 }).join('');
-
-                if (marcadorChofer) mapa.removeLayer(marcadorChofer);
-                const choferIcon = L.divIcon({ html: '🚚', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
-                marcadorChofer = L.marker([miUbicacion.lat, miUbicacion.lng], { icon: choferIcon }).addTo(mapa);
-                mapa.setView([miUbicacion.lat, miUbicacion.lng], 13);
             } catch (error) {
                 console.error(error);
                 document.getElementById('lista-pendientes').innerHTML = '<p style="color:red;">Error al cargar pedidos.</p>';
@@ -402,28 +540,12 @@
                     cliente_telefono: telefonoCliente
                 };
 
-                document.getElementById('ruta-cliente').textContent = nombreCliente;
-                document.getElementById('ruta-direccion').textContent = direccionCliente;
-                document.getElementById('ruta-telefono').textContent = telefonoCliente;
-                document.getElementById('ruta-monto').textContent = monto;
-                document.getElementById('pedido-en-ruta').classList.remove('hidden');
-                document.getElementById('lista-pendientes').classList.add('hidden');
-
-                if (marcadorCliente) mapa.removeLayer(marcadorCliente);
-                const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
-                marcadorCliente = L.marker([latCliente, lngCliente], { icon: clienteIcon }).addTo(mapa);
-                const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [latCliente, lngCliente]]);
-                mapa.fitBounds(bounds, { padding: [30, 30] });
-
-                if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
-                envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
-                await enviarUbicacion();
+                mostrarPedidoEnCurso();
             } catch (error) {
                 alert('Error al tomar pedido: ' + error.message);
             }
         };
 
-        // Entregar pedido con depuración
         document.getElementById('btn-entregar').addEventListener('click', async () => {
             if (!pedidoEnRuta) return;
             if (!confirm('¿Confirmar entrega del pedido?')) return;
@@ -470,22 +592,62 @@
         });
 
         async function enviarUbicacion() {
-            if (!pedidoEnRuta || !choferActual) return;
+            if (!pedidoEnRuta || !choferActual || !miUbicacion) return;
             try {
-                const pos = await getCurrentPosition();
                 await fetch(`${SUPABASE_URL}/rest/v1/ubicaciones_repartidor`, {
                     method: 'POST',
                     headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({
                         chofer_id: choferActual.id,
-                        lat: pos.lat,
-                        lng: pos.lng
+                        lat: miUbicacion.lat,
+                        lng: miUbicacion.lng
                     })
                 });
             } catch (e) {
                 console.warn('No se pudo enviar ubicación:', e);
             }
         }
+
+        // ----- PERFIL -----
+        function cargarPerfil() {
+            if (!choferActual) return;
+            document.getElementById('perfil-nombre').value = choferActual.nombre || '';
+            document.getElementById('perfil-telefono').value = choferActual.telefono || '';
+            document.getElementById('perfil-imagen').value = choferActual.imagen_url || '';
+            const avatar = document.getElementById('avatar-preview');
+            if (choferActual.imagen_url) {
+                avatar.style.backgroundImage = `url(${choferActual.imagen_url})`;
+            } else {
+                avatar.style.backgroundImage = "url('https://via.placeholder.com/80')";
+            }
+        }
+
+        document.getElementById('btn-guardar-perfil').addEventListener('click', async () => {
+            if (!choferActual) return;
+            const nombre = document.getElementById('perfil-nombre').value.trim();
+            const telefono = document.getElementById('perfil-telefono').value.trim();
+            const imagen_url = document.getElementById('perfil-imagen').value.trim();
+
+            if (!nombre || !telefono) {
+                return alert('Nombre y teléfono son obligatorios.');
+            }
+
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${choferActual.id}`, {
+                    method: 'PATCH',
+                    headers: { ...headers, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ nombre, telefono, imagen_url })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const actualizado = await res.json();
+                choferActual = actualizado[0];
+                document.getElementById('chofer-nombre').textContent = `🚚 ${choferActual.nombre}`;
+                cargarPerfil();
+                alert('Perfil actualizado.');
+            } catch (e) {
+                alert('Error al guardar: ' + e.message);
+            }
+        });
     </script>
 </body>
 </html>
