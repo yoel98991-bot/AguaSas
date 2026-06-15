@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Repartidor - Uber Style</title>
+    <title>Repartidor - Routing Pro</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -11,10 +11,9 @@
     <style>
         :root {
             --bg-app: #0f172a; 
-            --bg-panel: rgba(30, 41, 59, 0.85); /* Glassmorphism */
+            --bg-panel: rgba(30, 41, 59, 0.85);
             --border-color: rgba(255, 255, 255, 0.1);
             --primary-blue: #0ea5e9; 
-            --primary-hover: #0284c7;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --success-green: #10b981;
@@ -28,121 +27,67 @@
         
         body, html {
             font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-app);
-            color: var(--text-main);
-            /* Bloquear scroll completamente */
-            width: 100vw;
-            height: 100dvh; /* dvh evita problemas con la barra de Safari/Chrome móvil */
-            overflow: hidden; 
+            background: var(--bg-app); color: var(--text-main);
+            width: 100vw; height: 100dvh; overflow: hidden; 
             -webkit-font-smoothing: antialiased;
         }
 
         i[data-lucide] { width: 18px; height: 18px; stroke-width: 2; }
         .icon-text { display: flex; align-items: center; gap: 8px; }
 
-        /* --- CONTENEDORES PRINCIPALES --- */
-        #map {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-            background: #0f172a;
-        }
-        .leaflet-control-zoom { display: none; }
-        .leaflet-control-attribution { display: none; } /* Más limpio */
+        /* --- MAPA Y CONTENEDORES --- */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #0f172a; }
+        .leaflet-control-zoom, .leaflet-control-attribution { display: none; }
         .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(95%); }
 
-        /* Capa de interfaz flotante */
         #ui-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-            pointer-events: none; /* Deja que los clics pasen al mapa */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        /* --- TOP BAR (FLOTANTE) --- */
+        /* --- TOP BAR --- */
         .top-bar {
-            pointer-events: auto;
-            margin: 16px;
-            background: var(--bg-panel);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 16px 20px;
-            border-radius: var(--radius-card);
+            pointer-events: auto; margin: 16px; background: var(--bg-panel);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 16px 20px; border-radius: var(--radius-card);
             border: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow-float);
+            display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-float);
         }
 
-        /* --- BOTTOM SHEET (FLOTANTE) --- */
+        /* --- BOTTOM SHEET --- */
         .bottom-sheet {
-            pointer-events: auto;
-            background: var(--bg-panel);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border-color);
-            border-radius: 32px 32px 0 0;
-            padding: 24px 0 32px 0; /* Padding lateral se maneja interno */
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-            max-height: 50vh;
-            display: flex;
-            flex-direction: column;
+            pointer-events: auto; background: var(--bg-panel);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-color); border-radius: 32px 32px 0 0;
+            padding: 24px 0 32px 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            max-height: 50vh; display: flex; flex-direction: column;
         }
+        .bottom-sheet-handle { width: 40px; height: 4px; background: var(--border-color); border-radius: 4px; margin: 0 auto 16px auto; }
 
-        .bottom-sheet-handle {
-            width: 40px; height: 4px;
-            background: var(--border-color);
-            border-radius: 4px;
-            margin: 0 auto 16px auto;
-        }
-
-        /* --- CARRUSEL DE PEDIDOS (SCROLL HORIZONTAL) --- */
+        /* --- CARRUSEL --- */
         .order-carousel {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            gap: 16px;
-            padding: 0 20px 10px 20px;
-            /* Ocultar barra de scroll nativa */
-            scrollbar-width: none; 
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+            gap: 16px; padding: 0 20px 10px 20px; scrollbar-width: none; 
         }
         .order-carousel::-webkit-scrollbar { display: none; }
 
         .order-card, .current-order {
-            flex: 0 0 88%; /* El 88% permite que el siguiente pedido asome un poco */
-            scroll-snap-align: center;
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid var(--primary-blue);
-            border-radius: var(--radius-card);
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            position: relative;
+            flex: 0 0 88%; scroll-snap-align: center;
+            background: rgba(15, 23, 42, 0.9); border: 1px solid var(--primary-blue);
+            border-radius: var(--radius-card); padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;
         }
-
-        /* Pedido en curso ocupa el 100% */
         .current-order { flex: 0 0 calc(100% - 40px); margin: 0 20px; border-color: var(--success-green); }
 
-        .order-header {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            margin-bottom: 12px;
-        }
+        .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
         .order-number-badge {
-            background: var(--primary-blue); color: #fff;
-            width: 28px; height: 28px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.9rem;
+            background: var(--primary-blue); color: #fff; width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
             box-shadow: 0 2px 8px rgba(14, 165, 233, 0.5);
         }
         .monto-tag { color: var(--success-green); font-weight: 700; font-size: 1.2rem; }
-
-        .order-meta {
-            color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;
-            display: flex; flex-direction: column; gap: 8px;
-        }
+        .order-meta { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
         .order-meta div { display: flex; align-items: center; gap: 10px; }
         .order-meta i { color: var(--primary-blue); }
 
@@ -151,12 +96,13 @@
             background: var(--primary-blue); color: white; border: none;
             padding: 14px 20px; width: 100%; border-radius: var(--radius-button);
             font-size: 1rem; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
+            text-decoration: none; /* Para cuando se use como enlace */
         }
         .btn:active { transform: scale(0.98); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-success { background: var(--success-green); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary-blue); color: var(--primary-blue); }
         
         .btn-icon {
             background: rgba(255,255,255,0.1); border: none; border-radius: 50%;
@@ -164,67 +110,54 @@
             color: #fff; cursor: pointer;
         }
 
-        /* --- MARCADORES DEL MAPA --- */
-        .leaflet-marker-icon.driver-marker-container { transition: transform 0.6s linear !important; }
-        
-        .driver-avatar-marker {
-            width: 48px; height: 48px; border-radius: 50%;
-            border: 3px solid var(--primary-blue);
-            background-size: cover; background-position: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-        }
+        .action-buttons { display: flex; gap: 12px; margin-top: 16px; }
 
+        /* --- MARCADORES --- */
+        .leaflet-marker-icon.driver-marker-container { transition: transform 0.6s linear !important; }
+        .driver-avatar-marker {
+            width: 48px; height: 48px; border-radius: 50%; border: 3px solid var(--primary-blue);
+            background-size: cover; background-position: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
         .driver-dot-marker {
             width: 22px; height: 22px; border-radius: 50%;
             background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
             box-shadow: 0 0 10px rgba(14, 165, 233, 0.8), 0 0 20px rgba(14, 165, 233, 0.4);
             animation: pulse-dot 2s infinite;
         }
-
         .client-numbered-marker {
-            background: var(--bg-app);
-            border: 2px solid var(--primary-blue);
-            color: #fff; font-weight: 700; font-size: 14px;
-            width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            position: relative;
+            background: var(--bg-app); border: 2px solid var(--primary-blue); color: #fff; font-weight: 700;
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative;
         }
         .client-numbered-marker::after {
             content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
             width: 2px; height: 6px; background: var(--primary-blue);
         }
-
         .client-active-marker { border-color: var(--success-green); background: var(--success-green); }
         .client-active-marker::after { background: var(--success-green); }
 
-        @keyframes pulse-dot {
-            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
-        }
+        @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
 
-        /* --- PANTALLAS SUPERPUESTAS (LOGIN / PERFIL) --- */
+        /* --- OVERLAYS --- */
         .fullscreen-overlay {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
-            background: var(--bg-app); z-index: 100;
-            display: flex; flex-direction: column; padding: 24px;
-            overflow-y: auto;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: var(--bg-app);
+            z-index: 100; display: flex; flex-direction: column; padding: 24px; overflow-y: auto;
         }
         .login-box { margin: auto; width: 100%; max-width: 400px; text-align: center; }
         .login-box h2 { font-size: 1.8rem; margin-bottom: 8px; }
         .login-box p { color: var(--text-muted); margin-bottom: 32px; }
-        
         .form-input {
-            width: 100%; padding: 16px; background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-color); border-radius: var(--radius-button);
-            color: var(--text-main); font-size: 1.1rem; margin-bottom: 20px; text-align: center;
+            width: 100%; padding: 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
+            border-radius: var(--radius-button); color: var(--text-main); font-size: 1.1rem; margin-bottom: 20px; text-align: center;
         }
         .form-input:focus { outline: none; border-color: var(--primary-blue); }
-
         .hidden { display: none !important; }
         .dot-flashing { width: 8px; height: 8px; background-color: var(--success-green); border-radius: 50%; animation: dot-blink 1.5s infinite linear; }
         @keyframes dot-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Estilo animado para la línea de ruta */
+        .ruta-animada { stroke-dasharray: 10; animation: dash 10s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: -100; } }
     </style>
 </head>
 <body>
@@ -234,46 +167,14 @@
             <h2>WaterApp Pro</h2>
             <p>Acceso exclusivo para repartidores</p>
             <input type="tel" id="telefonoChofer" class="form-input" placeholder="Tu número de teléfono">
-            <button class="btn" id="btn-ingresar">
-                <i data-lucide="arrow-right"></i> Conectar
-            </button>
+            <button class="btn" id="btn-ingresar"><i data-lucide="arrow-right"></i> Conectar</button>
             <p id="login-error" style="color: var(--danger-red); font-size: 0.9rem; margin-top: 16px; display: none;"></p>
-        </div>
-    </div>
-
-    <div id="screen-perfil" class="fullscreen-overlay hidden">
-        <div style="display: flex; align-items: center; margin-bottom: 32px; gap: 16px;">
-            <button class="btn-icon" id="btn-cerrar-perfil"><i data-lucide="arrow-left"></i></button>
-            <h2 style="margin: 0; font-size: 1.4rem;">Mi Perfil</h2>
-        </div>
-        
-        <div style="max-width: 400px; margin: 0 auto; width: 100%;">
-            <div id="avatar-preview" style="width: 100px; height: 100px; border-radius: 50%; background: #1e293b; margin: 0 auto 32px; background-size: cover; background-position: center; border: 2px solid var(--border-color);"></div>
-            
-            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; display: block;">Nombre Completo</label>
-            <input type="text" id="perfil-nombre" class="form-input" placeholder="Tu nombre" style="text-align: left;">
-            
-            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; display: block;">Teléfono</label>
-            <input type="tel" id="perfil-telefono" class="form-input" placeholder="Tu teléfono" style="text-align: left;">
-            
-            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; display: block;">Foto de Perfil (URL)</label>
-            <input type="url" id="perfil-imagen" class="form-input" placeholder="https://..." style="text-align: left;">
-            
-            <button class="btn" id="btn-guardar-perfil" style="margin-top: 16px; margin-bottom: 24px;">
-                <i data-lucide="save"></i> Actualizar Datos
-            </button>
-
-            <button class="btn" id="btn-salir" style="background: transparent; border: 1px solid var(--danger-red); color: var(--danger-red);">
-                <i data-lucide="log-out"></i> Cerrar Sesión
-            </button>
         </div>
     </div>
 
     <div id="work-section" class="hidden" style="width: 100%; height: 100%; position: relative;">
         <div id="map"></div>
-
         <div id="ui-layer">
-            
             <div class="top-bar">
                 <div class="icon-text">
                     <div class="dot-flashing"></div>
@@ -282,7 +183,7 @@
                         <span style="font-size: 0.75rem; color: var(--success-green);">En línea</span>
                     </div>
                 </div>
-                <button class="btn-icon" id="btn-abrir-perfil"><i data-lucide="user"></i></button>
+                <button class="btn-icon" id="btn-salir"><i data-lucide="log-out"></i></button>
             </div>
 
             <div class="bottom-sheet">
@@ -301,15 +202,19 @@
                             <div><i data-lucide="map-pin"></i> <span id="ruta-direccion"></span></div>
                             <div><i data-lucide="phone"></i> <span id="ruta-telefono"></span></div>
                         </div>
-                        <button class="btn btn-success" id="btn-entregar" style="margin-top: 16px;">
-                            <i data-lucide="check-circle"></i> Confirmar Entrega
-                        </button>
-                        <p id="error-venta" style="color: var(--danger-red); font-size: 0.85rem; margin-top: 12px; display: none; text-align: center;"></p>
+                        
+                        <div class="action-buttons">
+                            <a href="#" id="btn-navegar" target="_blank" class="btn btn-outline" style="flex: 1;">
+                                <i data-lucide="navigation"></i> Guiar
+                            </a>
+                            <button class="btn btn-success" id="btn-entregar" style="flex: 2;">
+                                <i data-lucide="check-circle"></i> Entregado
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div id="lista-pendientes" class="order-carousel">
-                    </div>
+                <div id="lista-pendientes" class="order-carousel"></div>
             </div>
         </div>
     </div>
@@ -323,12 +228,12 @@
         let choferActual = null;
         let mapa = null;
         let marcadorChofer = null;
-        let marcadoresPendientes = []; // Array para limpiar los 1, 2, 3 del mapa
+        let marcadoresPendientes = []; 
+        let capaRutaDibujada = null; // Nueva variable para guardar la línea dibujada
         let miUbicacion = null;
         let envioUbicacionInterval = null;
         let pedidoEnRuta = null;
         let canalesActivos = [];
-        let primeraVezCentrado = false;
 
         lucide.createIcons();
 
@@ -337,39 +242,21 @@
             if (telefonoGuardado) document.getElementById('telefonoChofer').value = telefonoGuardado;
         });
 
-        function unsubscribeAll() {
-            canalesActivos.forEach(ch => supabaseClient.removeChannel(ch));
-            canalesActivos = [];
-        }
-
-        // --- NAVEGACIÓN PERFIL ---
-        document.getElementById('btn-abrir-perfil').addEventListener('click', () => {
-            document.getElementById('screen-perfil').classList.remove('hidden');
-            cargarPerfil();
-        });
-        document.getElementById('btn-cerrar-perfil').addEventListener('click', () => {
-            document.getElementById('screen-perfil').classList.add('hidden');
-        });
+        function unsubscribeAll() { canalesActivos.forEach(ch => supabaseClient.removeChannel(ch)); canalesActivos = []; }
 
         // --- LOGIN ---
         document.getElementById('btn-ingresar').addEventListener('click', async () => {
             const telefono = document.getElementById('telefonoChofer').value.trim();
-            if (!telefono) return mostrarErrorLogin('Ingresa tu teléfono.');
+            if (!telefono) return document.getElementById('login-error').style.display = 'block';
             
             const btn = document.getElementById('btn-ingresar');
-            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Validando...';
-            lucide.createIcons();
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Validando...'; lucide.createIcons();
             
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?telefono=eq.${telefono}&select=*&limit=1`, { headers });
                 const choferes = await res.json();
                 
-                if (choferes.length === 0) {
-                    mostrarErrorLogin('Número no autorizado.');
-                    btn.disabled = false; btn.innerHTML = '<i data-lucide="arrow-right"></i> Conectar';
-                    lucide.createIcons();
-                    return;
-                }
+                if (choferes.length === 0) throw new Error('Número no autorizado');
                 
                 localStorage.setItem('choferTelefono', telefono);
                 choferActual = choferes[0];
@@ -377,36 +264,17 @@
                 
                 document.getElementById('screen-login').classList.add('hidden');
                 document.getElementById('work-section').classList.remove('hidden');
-                
-                primeraVezCentrado = false;
                 await iniciarApp();
             } catch (error) {
-                mostrarErrorLogin('Error de conexión.');
-                btn.disabled = false; btn.innerHTML = '<i data-lucide="arrow-right"></i> Conectar';
-                lucide.createIcons();
+                document.getElementById('login-error').textContent = error.message;
+                document.getElementById('login-error').style.display = 'block';
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="arrow-right"></i> Conectar'; lucide.createIcons();
             }
         });
 
-        function mostrarErrorLogin(msg) {
-            const errEl = document.getElementById('login-error');
-            errEl.textContent = msg; errEl.style.display = 'block';
-        }
-
         document.getElementById('btn-salir').addEventListener('click', () => {
             if (pedidoEnRuta) return alert('Entrega el pedido actual antes de salir.');
-            
-            if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
-            unsubscribeAll();
-            choferActual = null;
-            limpiarMarcadoresPendientes();
-            if (marcadorChofer) { mapa.removeLayer(marcadorChofer); marcadorChofer = null; }
-            
-            document.getElementById('screen-perfil').classList.add('hidden');
-            document.getElementById('work-section').classList.add('hidden');
-            document.getElementById('screen-login').classList.remove('hidden');
-            document.getElementById('btn-ingresar').disabled = false;
-            document.getElementById('btn-ingresar').innerHTML = '<i data-lucide="arrow-right"></i> Conectar';
-            lucide.createIcons();
+            location.reload(); // Forma más limpia de reiniciar el estado para el próximo login
         });
 
         // --- MAPA Y GPS ---
@@ -422,8 +290,7 @@
                 );
             }
             if (!miUbicacion) {
-                try { miUbicacion = await getCurrentPosition(); } 
-                catch(e) { miUbicacion = { lat: 10.1620, lng: -68.0077 }; }
+                try { miUbicacion = await getCurrentPosition(); } catch(e) { miUbicacion = { lat: 10.1620, lng: -68.0077 }; }
             }
             initMap(miUbicacion.lat, miUbicacion.lng);
             await recuperarPedidoEnRuta();
@@ -432,21 +299,14 @@
         }
 
         function crearIconoChofer() {
-            if (choferActual && choferActual.imagen_url) {
-                return L.divIcon({
-                    html: `<div class="driver-avatar-marker" style="background-image: url('${choferActual.imagen_url}')"></div>`,
-                    className: 'driver-marker-container', iconSize: [48, 48], iconAnchor: [24, 24]
-                });
-            } else {
-                return L.divIcon({
-                    html: `<div class="driver-dot-marker"></div>`,
-                    className: 'driver-marker-container', iconSize: [22, 22], iconAnchor: [11, 11]
-                });
-            }
+            return L.divIcon({
+                html: `<div class="driver-dot-marker"></div>`,
+                className: 'driver-marker-container', iconSize: [22, 22], iconAnchor: [11, 11]
+            });
         }
 
         function initMap(lat, lng) {
-            if (mapa) { setTimeout(() => mapa.invalidateSize(), 100); return; }
+            if (mapa) return;
             mapa = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(mapa);
             marcadorChofer = L.marker([lat, lng], { icon: crearIconoChofer(), zIndexOffset: 1000 }).addTo(mapa);
@@ -455,20 +315,63 @@
         function actualizarMarcadorChofer() {
             if (!marcadorChofer || !miUbicacion) return;
             marcadorChofer.setLatLng([miUbicacion.lat, miUbicacion.lng]);
-            if (!primeraVezCentrado && !pedidoEnRuta) {
+            // Si NO hay ruta dibujada, mantener al chofer en el centro
+            if (!capaRutaDibujada && !pedidoEnRuta) {
                 mapa.setView([miUbicacion.lat, miUbicacion.lng], 15);
-                primeraVezCentrado = true;
             }
         }
 
         function getCurrentPosition() {
             return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) reject('GPS no soportado');
                 navigator.geolocation.getCurrentPosition(
                     pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
                     err => reject(err), { enableHighAccuracy: true }
                 );
             });
+        }
+
+        // --- LÓGICA DE DIBUJAR RUTA (NUEVO) ---
+        async function trazarRutaEnMapa(latDestino, lngDestino) {
+            if (!miUbicacion) return;
+            
+            // Si ya hay una ruta, la borramos para no sobreponer
+            if (capaRutaDibujada) { mapa.removeLayer(capaRutaDibujada); }
+
+            try {
+                // API Pública de OSRM (Gratuita). Ojo: Pide Longitud primero, luego Latitud
+                const url = `https://router.project-osrm.org/route/v1/driving/${miUbicacion.lng},${miUbicacion.lat};${lngDestino},${latDestino}?overview=full&geometries=geojson`;
+                const respuesta = await fetch(url);
+                const data = await respuesta.json();
+
+                if (data.routes && data.routes.length > 0) {
+                    const coordenadas = data.routes[0].geometry.coordinates;
+                    
+                    // OSRM devuelve [lng, lat], Leaflet dibuja con [lat, lng]. Las invertimos:
+                    const puntosRuta = coordenadas.map(coord => [coord[1], coord[0]]);
+
+                    // Dibujar la línea azul brillante estilo Uber
+                    capaRutaDibujada = L.polyline(puntosRuta, {
+                        color: '#0ea5e9',
+                        weight: 6,
+                        opacity: 0.8,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        className: 'ruta-animada'
+                    }).addTo(mapa);
+
+                    // Ajustar la cámara para que se vea el chofer, la ruta y el cliente
+                    mapa.fitBounds(capaRutaDibujada.getBounds(), { 
+                        paddingBottomRight: [0, 320], // Deja espacio para el menú de abajo
+                        paddingTopLeft: [0, 80],
+                        maxZoom: 17
+                    });
+                }
+            } catch (error) {
+                console.error("Error al trazar la ruta OSRM:", error);
+                // Si falla el trazado (sin internet o límite de API), solo centramos normal
+                const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [latDestino, lngDestino]]);
+                mapa.fitBounds(bounds, { paddingBottomRight: [0, 320], paddingTopLeft: [0, 80] });
+            }
         }
 
         // --- LÓGICA DE PEDIDOS ---
@@ -479,27 +382,29 @@
 
         async function recuperarPedidoEnRuta() {
             if (!choferActual) return;
-            try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?chofer_id=eq.${choferActual.id}&estado=eq.en_ruta&select=id,lat,lng,cliente_id,monto,clientes(nombre,direccion,telefono)&limit=1`, { headers });
-                const pedidos = await res.json();
-                if (pedidos.length > 0) {
-                    const p = pedidos[0];
-                    pedidoEnRuta = {
-                        id: p.id, latCliente: p.lat, lngCliente: p.lng, choferId: choferActual.id,
-                        cliente_id: p.cliente_id, monto: p.monto, cliente_nombre: p.clientes?.nombre,
-                        cliente_direccion: p.clientes?.direccion, cliente_telefono: p.clientes?.telefono
-                    };
-                    mostrarPedidoEnCurso();
-                }
-            } catch (error) { console.error(error); }
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?chofer_id=eq.${choferActual.id}&estado=eq.en_ruta&select=id,lat,lng,cliente_id,monto,clientes(nombre,direccion,telefono)&limit=1`, { headers });
+            const pedidos = await res.json();
+            if (pedidos.length > 0) {
+                const p = pedidos[0];
+                pedidoEnRuta = {
+                    id: p.id, latCliente: p.lat, lngCliente: p.lng, choferId: choferActual.id,
+                    cliente_id: p.cliente_id, monto: p.monto, cliente_nombre: p.clientes?.nombre,
+                    cliente_direccion: p.clientes?.direccion, cliente_telefono: p.clientes?.telefono
+                };
+                mostrarPedidoEnCurso();
+            }
         }
 
         function mostrarPedidoEnCurso() {
             limpiarMarcadoresPendientes();
-            document.getElementById('ruta-cliente').textContent = pedidoEnRuta.cliente_nombre || 'Cliente';
-            document.getElementById('ruta-direccion').textContent = pedidoEnRuta.cliente_direccion || 'Sin dirección';
-            document.getElementById('ruta-telefono').textContent = pedidoEnRuta.cliente_telefono || 'N/D';
+            document.getElementById('ruta-cliente').textContent = pedidoEnRuta.cliente_nombre;
+            document.getElementById('ruta-direccion').textContent = pedidoEnRuta.cliente_direccion;
+            document.getElementById('ruta-telefono').textContent = pedidoEnRuta.cliente_telefono;
             document.getElementById('ruta-monto').textContent = pedidoEnRuta.monto;
+            
+            // Actualizar URL del botón de Navegación Externa (Google Maps / Waze)
+            const btnNavegar = document.getElementById('btn-navegar');
+            btnNavegar.href = `https://www.google.com/maps/dir/?api=1&destination=${pedidoEnRuta.latCliente},${pedidoEnRuta.lngCliente}`;
             
             document.getElementById('pedido-en-ruta').classList.remove('hidden');
             document.getElementById('lista-pendientes').classList.add('hidden');
@@ -509,9 +414,8 @@
             marcadoresPendientes.push(m);
             lucide.createIcons();
             
-            // Ajustar vista considerando el Bottom Sheet (aprox 300px abajo)
-            const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente]]);
-            mapa.fitBounds(bounds, { paddingBottomRight: [0, 320], paddingTopLeft: [0, 80], maxZoom: 16 });
+            // TRAZAR LA RUTA AL ACEPTAR EL PEDIDO
+            trazarRutaEnMapa(pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente);
 
             if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
             envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
@@ -528,29 +432,24 @@
         }
 
         async function cargarPedidos() {
-            if (!choferActual || !miUbicacion) return;
-            if (pedidoEnRuta) return; // Si hay uno activo, no cargar lista
+            if (!choferActual || !miUbicacion || pedidoEnRuta) return; 
             
             const listDiv = document.getElementById('lista-pendientes');
             listDiv.classList.remove('hidden');
             limpiarMarcadoresPendientes();
+            if (capaRutaDibujada) { mapa.removeLayer(capaRutaDibujada); capaRutaDibujada = null; }
             
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.pendiente&select=id,monto,fecha_pedido,lat,lng,cliente_id,clientes(nombre,direccion,telefono)`, { headers });
                 const pedidos = await res.json();
 
                 if (pedidos.length === 0) {
-                    listDiv.innerHTML = `
-                        <div style="text-align: center; width: 100%; padding: 20px; color: var(--text-muted);">
-                            <i data-lucide="inbox" style="width: 40px; height: 40px; opacity: 0.5; margin-bottom: 10px;"></i>
-                            <p>No hay entregas pendientes</p>
-                        </div>`;
+                    listDiv.innerHTML = `<div style="text-align: center; width: 100%; padding: 20px; color: var(--text-muted);"><i data-lucide="inbox" style="width: 40px; height: 40px; opacity: 0.5; margin-bottom: 10px;"></i><p>No hay entregas pendientes</p></div>`;
                     lucide.createIcons();
                     mapa.setView([miUbicacion.lat, miUbicacion.lng], 15);
                     return;
                 }
 
-                // Calcular distancias y ORDENAR (el más cerca es el #1)
                 const pedidosOrdenados = pedidos.map(p => {
                     const dist = Math.sqrt(Math.pow(p.lat - miUbicacion.lat, 2) + Math.pow(p.lng - miUbicacion.lng, 2));
                     return { ...p, distancia: dist };
@@ -558,48 +457,35 @@
 
                 const bounds = L.latLngBounds([ [miUbicacion.lat, miUbicacion.lng] ]);
 
-                // Generar UI de Carrusel y Marcadores en el Mapa
                 listDiv.innerHTML = pedidosOrdenados.map((p, index) => {
                     const num = index + 1;
                     const cliente = p.clientes || {};
                     const km = (p.distancia * 111).toFixed(1);
                     
-                    // Agregar marcador numerado al mapa
                     const icon = L.divIcon({ html: `<div class="client-numbered-marker">${num}</div>`, className: '', iconSize: [32, 38], iconAnchor: [16, 38] });
                     const m = L.marker([p.lat, p.lng], { icon }).addTo(mapa);
                     marcadoresPendientes.push(m);
                     bounds.extend([p.lat, p.lng]);
 
-                    // Tarjeta del Carrusel
                     return `
                         <div class="order-card">
                             <div class="order-header">
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <div class="order-number-badge">${num}</div>
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 1.05rem;">${cliente.nombre || 'Cliente'}</div>
-                                        <div style="font-size: 0.8rem; color: var(--primary-blue);">${km} km</div>
-                                    </div>
+                                    <div><div style="font-weight: 600;">${cliente.nombre}</div><div style="font-size: 0.8rem; color: var(--primary-blue);">${km} km</div></div>
                                 </div>
                                 <div class="monto-tag">$${p.monto}</div>
                             </div>
-                            <div class="order-meta">
-                                <div><i data-lucide="map-pin"></i> <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">${cliente.direccion || 'Sin dirección'}</span></div>
-                            </div>
-                            <button class="btn" style="margin-top: 10px; padding: 12px;" onclick="tomarPedido(${p.id}, ${p.lat}, ${p.lng}, ${p.cliente_id}, '${cliente.nombre?.replace(/'/g, "\\'") || 'Cliente'}', '${cliente.direccion?.replace(/'/g, "\\'") || ''}', '${cliente.telefono?.replace(/'/g, "\\'") || ''}', ${p.monto})">
-                                Aceptar Pedido
-                            </button>
+                            <div class="order-meta"><div><i data-lucide="map-pin"></i> <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">${cliente.direccion}</span></div></div>
+                            <button class="btn" style="margin-top: 10px;" onclick="tomarPedido(${p.id}, ${p.lat}, ${p.lng}, ${p.cliente_id}, '${cliente.nombre?.replace(/'/g, "\\'")}', '${cliente.direccion?.replace(/'/g, "\\'")}', '${cliente.telefono}', ${p.monto})">Aceptar Pedido</button>
                         </div>
                     `;
                 }).join('');
                 
                 lucide.createIcons();
-                // Ajustar zoom para que se vea el repartidor y los clientes, dejando espacio para la UI abajo
                 mapa.fitBounds(bounds, { paddingBottomRight: [0, 250], paddingTopLeft: [0, 80] });
 
-            } catch (error) {
-                listDiv.innerHTML = '<p style="color:var(--danger-red); text-align:center; width:100%;">Error al sincronizar.</p>';
-            }
+            } catch (error) {}
         }
 
         window.tomarPedido = async function(pedidoId, latCliente, lngCliente, clienteId, nombreCliente, direccionCliente, telefonoCliente, monto) {
@@ -607,18 +493,14 @@
             if (!confirm('¿Deseas aceptar esta entrega?')) return;
 
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoId}`, {
+                await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoId}`, {
                     method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({ estado: 'en_ruta', chofer_id: choferActual.id })
                 });
-                if (!res.ok) throw new Error();
 
-                pedidoEnRuta = {
-                    id: pedidoId, latCliente, lngCliente, choferId: choferActual.id, cliente_id: clienteId,
-                    monto: monto, cliente_nombre: nombreCliente, cliente_direccion: direccionCliente, cliente_telefono: telefonoCliente
-                };
+                pedidoEnRuta = { id: pedidoId, latCliente, lngCliente, choferId: choferActual.id, cliente_id: clienteId, monto: monto, cliente_nombre: nombreCliente, cliente_direccion: direccionCliente, cliente_telefono: telefonoCliente };
                 mostrarPedidoEnCurso();
-            } catch (error) { alert('No se pudo aceptar la orden. Quizás otro chofer la tomó.'); cargarPedidos(); }
+            } catch (error) { alert('No se pudo aceptar. Otro chofer la tomó.'); cargarPedidos(); }
         };
 
         document.getElementById('btn-entregar').addEventListener('click', async () => {
@@ -626,38 +508,31 @@
             if (!confirm('¿Confirmas que entregaste el agua y recibiste el pago?')) return;
             
             const btn = document.getElementById('btn-entregar');
-            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Procesando...';
-            lucide.createIcons();
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Procesando...'; lucide.createIcons();
             
             try {
                 const now = new Date().toISOString();
-                const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoEnRuta.id}`, {
+                await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoEnRuta.id}`, {
                     method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({ estado: 'completado', fecha_entrega: now })
                 });
                 
                 await fetch(`${SUPABASE_URL}/rest/v1/ventas`, {
                     method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
-                    body: JSON.stringify({
-                        pedido_id: pedidoEnRuta.id, cliente_id: pedidoEnRuta.cliente_id,
-                        chofer_id: choferActual.id, monto_final: pedidoEnRuta.monto,
-                        metodo_pago: 'efectivo', fecha_completado: now
-                    })
+                    body: JSON.stringify({ pedido_id: pedidoEnRuta.id, cliente_id: pedidoEnRuta.cliente_id, chofer_id: choferActual.id, monto_final: pedidoEnRuta.monto, metodo_pago: 'efectivo', fecha_completado: now })
                 });
 
                 pedidoEnRuta = null;
                 if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
+                if (capaRutaDibujada) { mapa.removeLayer(capaRutaDibujada); capaRutaDibujada = null; }
                 
                 document.getElementById('pedido-en-ruta').classList.add('hidden');
                 document.getElementById('lista-pendientes').classList.remove('hidden');
                 
-                btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle"></i> Confirmar Entrega';
-                lucide.createIcons();
-                
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle"></i> Entregado'; lucide.createIcons();
                 await cargarPedidos();
             } catch (error) {
-                btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle"></i> Confirmar Entrega';
-                lucide.createIcons();
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle"></i> Entregado'; lucide.createIcons();
                 alert('Hubo un error al procesar la entrega.');
             }
         });
@@ -671,49 +546,6 @@
                 });
             } catch (e) {}
         }
-
-        // --- PERFIL ---
-        function cargarPerfil() {
-            if (!choferActual) return;
-            document.getElementById('perfil-nombre').value = choferActual.nombre || '';
-            document.getElementById('perfil-telefono').value = choferActual.telefono || '';
-            document.getElementById('perfil-imagen').value = choferActual.imagen_url || '';
-            
-            const avatar = document.getElementById('avatar-preview');
-            avatar.style.backgroundImage = choferActual.imagen_url ? `url(${choferActual.imagen_url})` : `url('https://ui-avatars.com/api/?name=${encodeURIComponent(choferActual.nombre)}&background=0f172a&color=0ea5e9')`;
-        }
-
-        document.getElementById('btn-guardar-perfil').addEventListener('click', async () => {
-            if (!choferActual) return;
-            const nombre = document.getElementById('perfil-nombre').value.trim();
-            const telefono = document.getElementById('perfil-telefono').value.trim();
-            const imagen_url = document.getElementById('perfil-imagen').value.trim();
-
-            if (!nombre || !telefono) return alert('Revisar campos obligatorios.');
-            const btn = document.getElementById('btn-guardar-perfil');
-            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i> Procesando...';
-            lucide.createIcons();
-
-            try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${choferActual.id}`, {
-                    method: 'PATCH', headers: { ...headers, 'Prefer': 'return=representation' },
-                    body: JSON.stringify({ nombre, telefono, imagen_url })
-                });
-                const actualizado = await res.json();
-                choferActual = actualizado[0];
-                
-                localStorage.setItem('choferTelefono', choferActual.telefono);
-                document.getElementById('chofer-nombre').textContent = choferActual.nombre;
-                cargarPerfil();
-                if (marcadorChofer) marcadorChofer.setIcon(crearIconoChofer());
-                alert('Perfil actualizado.');
-            } catch (e) {
-                alert('Error de actualización.');
-            } finally {
-                btn.disabled = false; btn.innerHTML = '<i data-lucide="save"></i> Actualizar Datos';
-                lucide.createIcons();
-            }
-        });
     </script>
 </body>
 </html>
