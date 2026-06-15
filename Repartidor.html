@@ -3,245 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Repartidor - WaterApp</title>
+    <title>Repartidor - App</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-app: #09090b;
-            --bg-card: #18181b;
-            --border-color: #27272a;
-            --primary-blue: #3b82f6;
-            --text-main: #f4f4f5;
-            --text-muted: #a1a1aa;
-            --success-green: #22c55e;
+            /* Paleta elegante oscura con acentos azules (estilo agua/clean) */
+            --bg-app: #0f172a; /* Slate 900 */
+            --bg-card: #1e293b; /* Slate 800 */
+            --border-color: #334155;
+            --primary-blue: #0ea5e9; /* Sky 500 */
+            --primary-hover: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-green: #10b981;
             --danger-red: #ef4444;
-            --radius-card: 16px;
-            --radius-button: 12px;
+            --radius-card: 20px;
+            --radius-button: 14px;
             --radius-pill: 9999px;
+            --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-app);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
-        .container { max-width: 600px; margin: 0 auto; width: 100%; padding: 20px; flex: 1; }
 
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            width: 100%; 
+            padding: 24px 20px; 
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LOGIN --- */
+        #login-section {
+            margin: auto 0; /* Centrado vertical */
+        }
+        
         .login-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 32px 24px;
+            box-shadow: var(--shadow-card);
+            text-align: center;
         }
+
+        .login-header {
+            margin-bottom: 24px;
+        }
+
+        .login-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .login-header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
         .login-card input {
             width: 100%;
-            background: transparent;
+            background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-button);
-            padding: 12px 14px;
+            padding: 14px 16px;
             color: var(--text-main);
-            font-size: 1rem;
-            margin-top: 8px;
+            font-size: 1.1rem;
+            margin-top: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: border-color 0.3s;
         }
+
+        .login-card input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* --- BOTONES --- */
         .btn {
             background: var(--primary-blue);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: var(--radius-button);
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-success { background: var(--success-green); color: #000; }
-        .btn-danger { background: var(--danger-red); }
-        #map {
-            height: 300px;
-            border-radius: var(--radius-card);
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            background: #1a1a1a;
-        }
-        .order-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .order-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-card);
-            padding: 16px;
-        }
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .order-meta {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .btn-take {
-            background: var(--success-green);
-            color: #000;
-            border: none;
-            padding: 10px;
+            padding: 14px 20px;
             width: 100%;
             border-radius: var(--radius-button);
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
-        .badge {
-            display: inline-block;
-            background: var(--primary-blue);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        
+        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn:active:not(:disabled) { transform: translateY(1px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+        
+        .btn-success { background: var(--success-green); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-success:hover { background: #059669; }
+        
+        .btn-danger { background: transparent; border: 1px solid var(--danger-red); color: var(--danger-red); padding: 8px 16px; width: auto; box-shadow: none; }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* --- UI PRINCIPAL --- */
+        .top-bar {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-radius: var(--radius-card);
+            border: 1px solid var(--border-color);
         }
+
+        #map {
+            height: 320px;
+            border-radius: var(--radius-card);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            background: #0f172a;
+            box-shadow: var(--shadow-card);
+            z-index: 1; /* Para evitar superposiciones raras */
+        }
+
         .leaflet-control-zoom { display: none; }
+        /* Filtro oscuro para el mapa */
         .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
-        .hidden { display: none; }
-        .current-order {
+        /* --- TARJETAS DE PEDIDO --- */
+        .order-list { display: flex; flex-direction: column; gap: 16px; }
+        
+        .order-card, .current-order {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
             padding: 20px;
-            margin-bottom: 20px;
+            box-shadow: var(--shadow-card);
+            transition: transform 0.2s;
         }
-        .current-order h3 { margin-bottom: 12px; }
-        .current-order p { margin-bottom: 6px; }
 
-        /* Pestañas */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .monto-tag {
+            color: var(--success-green);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .order-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .order-meta div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary-blue);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* --- ANIMACIÓN RADAR (ESPERANDO PEDIDOS) --- */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            border: 1px dashed var(--border-color);
+        }
+
+        .radar-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            opacity: 0;
+            animation: radar-pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        .pulse-ring:nth-child(2) { animation-delay: 1s; }
+
+        @keyframes radar-pulse {
+            0% { transform: scale(0.5); opacity: 0.8; }
+            70%, 100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        .realtime-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--success-green);
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .dot-flashing {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success-green);
+            border-radius: 50%;
+            animation: dot-blink 1.5s infinite linear;
+        }
+
+        @keyframes dot-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* --- PESTAÑAS --- */
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 6px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-color);
         }
+
         .tab {
             flex: 1;
-            padding: 10px;
-            background: var(--bg-card);
+            padding: 12px;
             border-radius: var(--radius-pill);
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.95rem;
             color: var(--text-muted);
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .tab.active { background: var(--primary-blue); color: white; }
 
-        /* Perfil */
+        .tab.active { 
+            background: var(--primary-blue); 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+        }
+
+        /* --- PERFIL --- */
         .profile-section {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 20px;
+            padding: 24px;
+            box-shadow: var(--shadow-card);
         }
+
         .avatar-preview {
-            width: 80px; height: 80px;
+            width: 100px; height: 100px;
             border-radius: 50%;
-            background: var(--bg-card-highlight, #1E253A);
-            margin: 0 auto 16px;
+            background: #0f172a;
+            margin: 0 auto 24px;
             background-size: cover;
             background-position: center;
-            border: 2px solid var(--primary-blue);
+            border: 3px solid var(--primary-blue);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
         }
-        .form-group {
-            margin-bottom: 16px;
-        }
+
+        .form-group { margin-bottom: 20px; }
+        
         .form-group label {
             display: block;
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
+        
         .form-group input {
             width: 100%;
-            padding: 10px 14px;
-            background: var(--bg-app);
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-button);
             color: var(--text-main);
+            transition: border-color 0.3s;
         }
+        .form-group input:focus { outline: none; border-color: var(--primary-blue); }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Login -->
+        
         <div id="login-section" class="login-card">
-            <label>Tu teléfono (registrado en el sistema)</label>
-            <input type="tel" id="telefonoChofer" placeholder="Ej: 1123456789">
-            <button class="btn" id="btn-ingresar">Ingresar</button>
-            <p id="login-error" style="color: #ef4444; font-size: 0.8rem; display: none;"></p>
+            <div class="login-header">
+                <h2>👋 Bienvenido</h2>
+                <p>Ingresa tu número para comenzar tu ruta</p>
+            </div>
+            <input type="tel" id="telefonoChofer" placeholder="Ej: 04120000000">
+            <button class="btn" id="btn-ingresar">Ingresar al sistema</button>
+            <p id="login-error" style="color: var(--danger-red); font-size: 0.85rem; margin-top: 12px; display: none;"></p>
         </div>
 
-        <!-- Zona de trabajo -->
         <div id="work-section" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span id="chofer-nombre" style="font-weight: 600;"></span>
-                <button class="btn btn-danger" id="btn-salir">Salir</button>
+            
+            <div class="top-bar">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="dot-flashing" style="width: 10px; height: 10px;"></div>
+                    <span id="chofer-nombre" style="font-weight: 600; font-size: 1.1rem;"></span>
+                </div>
+                <button class="btn-danger" id="btn-salir">Salir</button>
             </div>
 
-            <!-- Pestañas -->
             <div class="tabs">
-                <div class="tab active" data-tab="ruta">📍 Ruta</div>
-                <div class="tab" data-tab="perfil">👤 Perfil</div>
+                <div class="tab active" data-tab="ruta">📍 En Ruta</div>
+                <div class="tab" data-tab="perfil">👤 Mi Perfil</div>
             </div>
 
-            <!-- Contenido de Ruta -->
             <div id="tab-ruta" class="tab-content">
                 <div id="map"></div>
 
-                <!-- Pedido en curso -->
                 <div id="pedido-en-ruta" class="current-order hidden">
-                    <h3>🚚 Pedido en curso</h3>
-                    <p><strong>Cliente:</strong> <span id="ruta-cliente"></span></p>
-                    <p><strong>Dirección:</strong> <span id="ruta-direccion"></span></p>
-                    <p><strong>Teléfono:</strong> <span id="ruta-telefono"></span></p>
-                    <p><strong>Monto:</strong> $<span id="ruta-monto"></span></p>
-                    <button class="btn btn-success" id="btn-entregar">Entregar Pedido</button>
-                    <p id="error-venta" style="color: #ef4444; font-size: 0.8rem; margin-top: 8px; display: none;"></p>
+                    <h3 style="color: var(--primary-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        🚚 Pedido en curso
+                    </h3>
+                    <div class="order-meta">
+                        <div><span>👤</span> <strong id="ruta-cliente" style="color: white;"></strong></div>
+                        <div><span>📍</span> <span id="ruta-direccion"></span></div>
+                        <div><span>📞</span> <span id="ruta-telefono"></span></div>
+                    </div>
+                    <div style="margin: 20px 0; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; text-align: center;">
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Total a cobrar:</span>
+                        <div class="monto-tag">$<span id="ruta-monto"></span></div>
+                    </div>
+                    <button class="btn btn-success" id="btn-entregar">Completar Entrega</button>
+                    <p id="error-venta" style="color: var(--danger-red); font-size: 0.85rem; margin-top: 12px; display: none; text-align: center;"></p>
                 </div>
 
-                <!-- Lista de pendientes -->
                 <div id="lista-pendientes" class="order-list">
-                    <p style="text-align: center; color: var(--text-muted);">Cargando pedidos...</p>
-                </div>
+                    </div>
             </div>
 
-            <!-- Contenido de Perfil -->
             <div id="tab-perfil" class="tab-content hidden">
                 <div class="profile-section">
-                    <div class="avatar-preview" id="avatar-preview" style="background-image: url('https://via.placeholder.com/80');"></div>
+                    <div class="avatar-preview" id="avatar-preview"></div>
                     <div class="form-group">
-                        <label>Nombre</label>
+                        <label>Nombre Completo</label>
                         <input type="text" id="perfil-nombre" placeholder="Tu nombre">
                     </div>
                     <div class="form-group">
-                        <label>Teléfono</label>
+                        <label>Número de Teléfono</label>
                         <input type="tel" id="perfil-telefono" placeholder="Tu teléfono">
                     </div>
                     <div class="form-group">
-                        <label>URL de imagen (opcional)</label>
+                        <label>Foto de Perfil (URL)</label>
                         <input type="url" id="perfil-imagen" placeholder="https://ejemplo.com/foto.jpg">
                     </div>
-                    <button class="btn" id="btn-guardar-perfil">Guardar cambios</button>
+                    <button class="btn" id="btn-guardar-perfil" style="margin-top: 10px;">Actualizar Datos</button>
                 </div>
             </div>
         </div>
@@ -263,17 +427,25 @@
         let marcadorChofer = null;
         let marcadorCliente = null;
         let miUbicacion = null;
-        let miHeading = 0; // orientación actual
+        let miHeading = 0; 
         let envioUbicacionInterval = null;
         let pedidoEnRuta = null;
         let canalesActivos = [];
+
+        // ----- INIT: Cargar LocalStorage -----
+        document.addEventListener('DOMContentLoaded', () => {
+            const telefonoGuardado = localStorage.getItem('choferTelefono');
+            if (telefonoGuardado) {
+                document.getElementById('telefonoChofer').value = telefonoGuardado;
+            }
+        });
 
         function unsubscribeAll() {
             canalesActivos.forEach(ch => supabaseClient.removeChannel(ch));
             canalesActivos = [];
         }
 
-        // ----- NAVEGACIÓN POR PESTAÑAS -----
+        // ----- NAVEGACIÓN -----
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -283,7 +455,7 @@
                 document.getElementById('tab-perfil').classList.toggle('hidden', tabId !== 'perfil');
 
                 if (tabId === 'ruta') {
-                    if (mapa) mapa.invalidateSize();
+                    if (mapa) setTimeout(() => mapa.invalidateSize(), 100);
                     cargarPedidos();
                 } else if (tabId === 'perfil') {
                     cargarPerfil();
@@ -295,65 +467,84 @@
         document.getElementById('btn-ingresar').addEventListener('click', async () => {
             const telefono = document.getElementById('telefonoChofer').value.trim();
             if (!telefono) {
-                document.getElementById('login-error').textContent = 'Ingresá tu teléfono.';
-                document.getElementById('login-error').style.display = 'block';
+                mostrarErrorLogin('Por favor, ingresa tu teléfono.');
                 return;
             }
+            
             const btn = document.getElementById('btn-ingresar');
-            btn.disabled = true; btn.textContent = 'Buscando...';
+            btn.disabled = true; btn.textContent = 'Conectando...';
+            
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?telefono=eq.${telefono}&select=*&limit=1`, { headers });
                 const choferes = await res.json();
+                
                 if (choferes.length === 0) {
-                    document.getElementById('login-error').textContent = 'Repartidor no encontrado.';
-                    document.getElementById('login-error').style.display = 'block';
-                    btn.disabled = false; btn.textContent = 'Ingresar';
+                    mostrarErrorLogin('Número no registrado en el sistema.');
+                    btn.disabled = false; btn.textContent = 'Ingresar al sistema';
                     return;
                 }
+                
+                // Guardar en LocalStorage para la próxima vez
+                localStorage.setItem('choferTelefono', telefono);
+                
                 choferActual = choferes[0];
-                document.getElementById('chofer-nombre').textContent = `🚚 ${choferActual.nombre}`;
+                document.getElementById('chofer-nombre').textContent = choferActual.nombre;
+                
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('work-section').classList.remove('hidden');
                 document.getElementById('login-error').style.display = 'none';
+                
                 await iniciarApp();
             } catch (error) {
-                document.getElementById('login-error').textContent = 'Error de conexión.';
-                document.getElementById('login-error').style.display = 'block';
-                btn.disabled = false; btn.textContent = 'Ingresar';
+                mostrarErrorLogin('Error de conexión a la base de datos.');
+                btn.disabled = false; btn.textContent = 'Ingresar al sistema';
             }
         });
+
+        function mostrarErrorLogin(msg) {
+            const errEl = document.getElementById('login-error');
+            errEl.textContent = msg;
+            errEl.style.display = 'block';
+        }
 
         document.getElementById('btn-salir').addEventListener('click', () => {
             if (pedidoEnRuta) {
-                alert('Primero entregá el pedido actual.');
+                alert('No puedes salir con un pedido en ruta. Entrégalo primero.');
                 return;
             }
+            // Limpiar datos
             if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
             unsubscribeAll();
+            localStorage.removeItem('choferTelefono'); // Opcional: borrar el número guardado al salir
             choferActual = null;
-            document.getElementById('login-section').classList.remove('hidden');
+            
             document.getElementById('work-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('telefonoChofer').value = '';
+            document.getElementById('btn-ingresar').disabled = false;
+            document.getElementById('btn-ingresar').textContent = 'Ingresar al sistema';
         });
 
+        // ----- LÓGICA DE MAPA Y UBICACIÓN -----
         async function iniciarApp() {
-            // Activar GPS continuo para obtener ubicación y rumbo
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
                     (pos) => {
                         miUbicacion = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        miHeading = pos.coords.heading || 0; // grados (0 = norte)
+                        miHeading = pos.coords.heading || 0;
                         actualizarMarcadorChofer();
                     },
                     (err) => console.warn('Error GPS:', err),
                     { enableHighAccuracy: true }
                 );
-            } else {
-                alert('GPS no disponible');
             }
-            // Iniciar mapa con ubicación inicial (aproximada)
             if (!miUbicacion) {
-                miUbicacion = await getCurrentPosition();
+                try {
+                    miUbicacion = await getCurrentPosition();
+                } catch(e) {
+                    // Posición por defecto si falla el GPS para que el mapa renderice
+                    miUbicacion = { lat: 10.1620, lng: -68.0077 }; 
+                }
             }
             initMap(miUbicacion.lat, miUbicacion.lng);
             await recuperarPedidoEnRuta();
@@ -362,30 +553,29 @@
         }
 
         function initMap(lat, lng) {
-            if (mapa) return;
+            if (mapa) {
+                setTimeout(() => mapa.invalidateSize(), 100);
+                return;
+            }
             mapa = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap'
             }).addTo(mapa);
-            // Crear marcador del chofer con flecha orientable
+            
             const arrowIcon = L.divIcon({
-                html: '<div style="font-size: 28px; line-height: 1; transform-origin: center; transition: transform 0.3s;">▶</div>',
-                className: '',
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
+                html: '<div style="font-size: 28px; line-height: 1; transform-origin: center; transition: transform 0.3s; color: var(--primary-blue);">🚀</div>',
+                className: '', iconSize: [28, 28], iconAnchor: [14, 14]
             });
             marcadorChofer = L.marker([lat, lng], { icon: arrowIcon }).addTo(mapa);
-            // Actualizar rotación inicial
             actualizarRotacionFlecha();
         }
 
         function actualizarRotacionFlecha() {
             if (!marcadorChofer) return;
             const icon = marcadorChofer.getElement();
-            if (!icon) return;
-            const flecha = icon.querySelector('div');
-            if (flecha) {
-                flecha.style.transform = `rotate(${miHeading}deg)`;
+            if (icon) {
+                const flecha = icon.querySelector('div');
+                if (flecha) flecha.style.transform = `rotate(${miHeading}deg)`;
             }
         }
 
@@ -393,7 +583,6 @@
             if (!marcadorChofer || !miUbicacion) return;
             marcadorChofer.setLatLng([miUbicacion.lat, miUbicacion.lng]);
             actualizarRotacionFlecha();
-            // Centrar mapa en el chofer si no está siguiendo una ruta activa
             if (!pedidoEnRuta) {
                 mapa.setView([miUbicacion.lat, miUbicacion.lng], mapa.getZoom());
             }
@@ -413,6 +602,7 @@
             });
         }
 
+        // ----- LÓGICA DE PEDIDOS -----
         async function recuperarPedidoEnRuta() {
             if (!choferActual) return;
             try {
@@ -420,23 +610,14 @@
                 const pedidos = await res.json();
                 if (pedidos.length > 0) {
                     const p = pedidos[0];
-                    const cliente = p.clientes || {};
                     pedidoEnRuta = {
-                        id: p.id,
-                        latCliente: p.lat,
-                        lngCliente: p.lng,
-                        choferId: choferActual.id,
-                        cliente_id: p.cliente_id,
-                        monto: p.monto,
-                        cliente_nombre: cliente.nombre,
-                        cliente_direccion: cliente.direccion,
-                        cliente_telefono: cliente.telefono
+                        id: p.id, latCliente: p.lat, lngCliente: p.lng,
+                        choferId: choferActual.id, cliente_id: p.cliente_id, monto: p.monto,
+                        cliente_nombre: p.clientes?.nombre, cliente_direccion: p.clientes?.direccion, cliente_telefono: p.clientes?.telefono
                     };
                     mostrarPedidoEnCurso();
                 }
-            } catch (error) {
-                console.error('Error al recuperar pedido en ruta:', error);
-            }
+            } catch (error) { console.error('Error al recuperar pedido:', error); }
         }
 
         function mostrarPedidoEnCurso() {
@@ -444,14 +625,16 @@
             document.getElementById('ruta-direccion').textContent = pedidoEnRuta.cliente_direccion || '-';
             document.getElementById('ruta-telefono').textContent = pedidoEnRuta.cliente_telefono || '-';
             document.getElementById('ruta-monto').textContent = pedidoEnRuta.monto;
+            
             document.getElementById('pedido-en-ruta').classList.remove('hidden');
             document.getElementById('lista-pendientes').classList.add('hidden');
 
             if (marcadorCliente) mapa.removeLayer(marcadorCliente);
-            const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+            const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [28, 28], iconAnchor: [14, 28] });
             marcadorCliente = L.marker([pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente], { icon: clienteIcon }).addTo(mapa);
+            
             const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [pedidoEnRuta.latCliente, pedidoEnRuta.lngCliente]]);
-            mapa.fitBounds(bounds, { padding: [30, 30] });
+            mapa.fitBounds(bounds, { padding: [40, 40] });
 
             if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
             envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
@@ -469,50 +652,74 @@
             canalesActivos.push(channel);
         }
 
+        function renderEmptyState() {
+            return `
+                <div class="empty-state">
+                    <div class="radar-container">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring"></div>
+                        <span>💧</span>
+                    </div>
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">Sin pedidos pendientes</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Esperando nuevas solicitudes...</p>
+                    <div class="realtime-status">
+                        <div class="dot-flashing"></div>
+                        Conectado en tiempo real
+                    </div>
+                </div>
+            `;
+        }
+
         async function cargarPedidos() {
             if (!choferActual || !miUbicacion) return;
             if (pedidoEnRuta) {
                 document.getElementById('lista-pendientes').classList.add('hidden');
                 return;
             }
-            document.getElementById('lista-pendientes').classList.remove('hidden');
+            
+            const listDiv = document.getElementById('lista-pendientes');
+            listDiv.classList.remove('hidden');
+            
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.pendiente&select=id,monto,fecha_pedido,lat,lng,cliente_id,clientes(nombre,direccion,telefono)&order=fecha_pedido.asc`, { headers });
                 const pedidos = await res.json();
 
                 if (marcadorCliente) { mapa.removeLayer(marcadorCliente); marcadorCliente = null; }
 
+                if (pedidos.length === 0) {
+                    listDiv.innerHTML = renderEmptyState();
+                    return;
+                }
+
                 const pedidosConDistancia = pedidos.map(p => {
                     const dist = Math.sqrt(Math.pow(p.lat - miUbicacion.lat, 2) + Math.pow(p.lng - miUbicacion.lng, 2));
                     return { ...p, distancia: dist };
                 }).sort((a, b) => a.distancia - b.distancia);
 
-                const listDiv = document.getElementById('lista-pendientes');
-                if (pedidosConDistancia.length === 0) {
-                    listDiv.innerHTML = '<p style="text-align:center;color:var(--text-muted);">No hay pedidos pendientes.</p>';
-                    return;
-                }
-
                 listDiv.innerHTML = pedidosConDistancia.map(p => {
                     const cliente = p.clientes || {};
+                    const km = (p.distancia * 111).toFixed(1);
                     return `
                         <div class="order-card">
                             <div class="order-header">
                                 <span>${cliente.nombre || 'Cliente'}</span>
-                                <span>$${p.monto}</span>
+                                <span class="monto-tag">$${p.monto}</span>
                             </div>
                             <div class="order-meta">
-                                <span>📞 ${cliente.telefono || 'N/D'}</span>
-                                <span>📍 ${cliente.direccion || 'Sin dirección'}</span>
-                                <span class="badge">${(p.distancia*111).toFixed(1)} km</span>
+                                <div><span>📍</span> ${cliente.direccion || 'Sin dirección'}</div>
+                                <div><span>📞</span> ${cliente.telefono || 'N/D'}</div>
                             </div>
-                            <button class="btn-take" onclick="tomarPedido(${p.id}, ${p.lat}, ${p.lng}, ${p.cliente_id}, '${cliente.nombre?.replace(/'/g, "\\'") || 'Cliente'}', '${cliente.direccion?.replace(/'/g, "\\'") || ''}', '${cliente.telefono?.replace(/'/g, "\\'") || ''}', ${p.monto})">Tomar pedido</button>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                                <span class="badge">A ${km} km de ti</span>
+                                <button class="btn" style="width: auto; padding: 10px 20px;" onclick="tomarPedido(${p.id}, ${p.lat}, ${p.lng}, ${p.cliente_id}, '${cliente.nombre?.replace(/'/g, "\\'") || 'Cliente'}', '${cliente.direccion?.replace(/'/g, "\\'") || ''}', '${cliente.telefono?.replace(/'/g, "\\'") || ''}', ${p.monto})">
+                                    Tomar pedido
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
             } catch (error) {
-                console.error(error);
-                document.getElementById('lista-pendientes').innerHTML = '<p style="color:red;">Error al cargar pedidos.</p>';
+                listDiv.innerHTML = '<p style="color:var(--danger-red); text-align:center;">Error al cargar pedidos.</p>';
             }
         }
 
@@ -529,65 +736,54 @@
                 if (!res.ok) throw new Error(await res.text());
 
                 pedidoEnRuta = {
-                    id: pedidoId,
-                    latCliente,
-                    lngCliente,
-                    choferId: choferActual.id,
-                    cliente_id: clienteId,
-                    monto: monto,
-                    cliente_nombre: nombreCliente,
-                    cliente_direccion: direccionCliente,
-                    cliente_telefono: telefonoCliente
+                    id: pedidoId, latCliente, lngCliente, choferId: choferActual.id, cliente_id: clienteId,
+                    monto: monto, cliente_nombre: nombreCliente, cliente_direccion: direccionCliente, cliente_telefono: telefonoCliente
                 };
-
                 mostrarPedidoEnCurso();
-            } catch (error) {
-                alert('Error al tomar pedido: ' + error.message);
-            }
+            } catch (error) { alert('Error al tomar pedido: ' + error.message); }
         };
 
         document.getElementById('btn-entregar').addEventListener('click', async () => {
             if (!pedidoEnRuta) return;
             if (!confirm('¿Confirmar entrega del pedido?')) return;
+            
+            const btn = document.getElementById('btn-entregar');
+            btn.disabled = true; btn.textContent = 'Procesando...';
             document.getElementById('error-venta').style.display = 'none';
+            
             try {
                 const now = new Date().toISOString();
                 const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoEnRuta.id}`, {
-                    method: 'PATCH',
-                    headers: { ...headers, 'Prefer': 'return=minimal' },
+                    method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({ estado: 'completado', fecha_entrega: now })
                 });
-                if (!patchRes.ok) throw new Error('Error al actualizar pedido: ' + await patchRes.text());
+                if (!patchRes.ok) throw new Error(await patchRes.text());
 
                 const ventaRes = await fetch(`${SUPABASE_URL}/rest/v1/ventas`, {
-                    method: 'POST',
-                    headers: { ...headers, 'Prefer': 'return=minimal' },
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({
-                        pedido_id: pedidoEnRuta.id,
-                        cliente_id: pedidoEnRuta.cliente_id,
-                        chofer_id: choferActual.id,
-                        monto_final: pedidoEnRuta.monto,
-                        metodo_pago: 'efectivo',
-                        fecha_completado: now
+                        pedido_id: pedidoEnRuta.id, cliente_id: pedidoEnRuta.cliente_id,
+                        chofer_id: choferActual.id, monto_final: pedidoEnRuta.monto,
+                        metodo_pago: 'efectivo', fecha_completado: now
                     })
                 });
 
-                if (!ventaRes.ok) {
-                    const errorText = await ventaRes.text();
-                    console.error('Error al insertar venta:', errorText);
-                    document.getElementById('error-venta').textContent = 'Error al guardar venta: ' + errorText;
-                    document.getElementById('error-venta').style.display = 'block';
-                    return;
-                }
+                if (!ventaRes.ok) throw new Error(await ventaRes.text());
 
                 pedidoEnRuta = null;
                 if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
                 if (marcadorCliente) { mapa.removeLayer(marcadorCliente); marcadorCliente = null; }
+                
                 document.getElementById('pedido-en-ruta').classList.add('hidden');
                 document.getElementById('lista-pendientes').classList.remove('hidden');
+                
+                btn.disabled = false; btn.textContent = 'Completar Entrega';
                 await cargarPedidos();
             } catch (error) {
-                alert('Error al entregar: ' + error.message);
+                btn.disabled = false; btn.textContent = 'Completar Entrega';
+                const errEl = document.getElementById('error-venta');
+                errEl.textContent = 'Error al procesar: ' + error.message;
+                errEl.style.display = 'block';
             }
         });
 
@@ -595,17 +791,10 @@
             if (!pedidoEnRuta || !choferActual || !miUbicacion) return;
             try {
                 await fetch(`${SUPABASE_URL}/rest/v1/ubicaciones_repartidor`, {
-                    method: 'POST',
-                    headers: { ...headers, 'Prefer': 'return=minimal' },
-                    body: JSON.stringify({
-                        chofer_id: choferActual.id,
-                        lat: miUbicacion.lat,
-                        lng: miUbicacion.lng
-                    })
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ chofer_id: choferActual.id, lat: miUbicacion.lat, lng: miUbicacion.lng })
                 });
-            } catch (e) {
-                console.warn('No se pudo enviar ubicación:', e);
-            }
+            } catch (e) {}
         }
 
         // ----- PERFIL -----
@@ -614,12 +803,9 @@
             document.getElementById('perfil-nombre').value = choferActual.nombre || '';
             document.getElementById('perfil-telefono').value = choferActual.telefono || '';
             document.getElementById('perfil-imagen').value = choferActual.imagen_url || '';
+            
             const avatar = document.getElementById('avatar-preview');
-            if (choferActual.imagen_url) {
-                avatar.style.backgroundImage = `url(${choferActual.imagen_url})`;
-            } else {
-                avatar.style.backgroundImage = "url('https://via.placeholder.com/80')";
-            }
+            avatar.style.backgroundImage = choferActual.imagen_url ? `url(${choferActual.imagen_url})` : `url('https://ui-avatars.com/api/?name=${encodeURIComponent(choferActual.nombre)}&background=0ea5e9&color=fff')`;
         }
 
         document.getElementById('btn-guardar-perfil').addEventListener('click', async () => {
@@ -628,24 +814,31 @@
             const telefono = document.getElementById('perfil-telefono').value.trim();
             const imagen_url = document.getElementById('perfil-imagen').value.trim();
 
-            if (!nombre || !telefono) {
-                return alert('Nombre y teléfono son obligatorios.');
-            }
+            if (!nombre || !telefono) return alert('Nombre y teléfono son obligatorios.');
+
+            const btn = document.getElementById('btn-guardar-perfil');
+            btn.disabled = true; btn.textContent = 'Guardando...';
 
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${choferActual.id}`, {
-                    method: 'PATCH',
-                    headers: { ...headers, 'Prefer': 'return=representation' },
+                    method: 'PATCH', headers: { ...headers, 'Prefer': 'return=representation' },
                     body: JSON.stringify({ nombre, telefono, imagen_url })
                 });
                 if (!res.ok) throw new Error(await res.text());
+                
                 const actualizado = await res.json();
                 choferActual = actualizado[0];
-                document.getElementById('chofer-nombre').textContent = `🚚 ${choferActual.nombre}`;
+                
+                // Actualizar localStorage si cambia el teléfono
+                localStorage.setItem('choferTelefono', choferActual.telefono);
+                
+                document.getElementById('chofer-nombre').textContent = choferActual.nombre;
                 cargarPerfil();
-                alert('Perfil actualizado.');
+                alert('Perfil actualizado con éxito.');
             } catch (e) {
                 alert('Error al guardar: ' + e.message);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Actualizar Datos';
             }
         });
     </script>
