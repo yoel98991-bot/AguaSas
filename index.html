@@ -179,7 +179,7 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- DEBUG CONSOLE (NUEVO) --- */
+        /* --- DEBUG CONSOLE --- */
         #debug-console {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -310,7 +310,6 @@
             logsBox.scrollTop = logsBox.scrollHeight;
         }
 
-        // Atrapar errores de la app completos
         window.onerror = function(msg, url, line) {
             logger(`CRITICAL ERROR: ${msg} en línea ${line}`, 'error');
         };
@@ -349,17 +348,27 @@
             logger('Revisando sesión guardada en LocalStorage...');
             const savedSession = localStorage.getItem('waterApp_session');
             if (savedSession) {
-                logger('Sesión encontrada. Cargando app directamente.');
                 const sessionData = JSON.parse(savedSession);
-                clienteActual = sessionData.clienteActual;
-                ubicacionActual = sessionData.ubicacionActual;
-                direccionLegible = sessionData.direccionLegible;
+                
+                // NUEVO: Verificamos que el cliente y su ID realmente existan
+                if (sessionData && sessionData.clienteActual && sessionData.clienteActual.id) {
+                    logger('Sesión válida encontrada. Cargando app directamente.');
+                    clienteActual = sessionData.clienteActual;
+                    ubicacionActual = sessionData.ubicacionActual;
+                    direccionLegible = sessionData.direccionLegible;
 
-                document.getElementById('setup-section').classList.remove('active');
-                document.getElementById('app-section').classList.add('active');
+                    document.getElementById('setup-section').classList.remove('active');
+                    document.getElementById('app-section').classList.add('active');
 
-                cargarProductos();
-                cargarHistorial();
+                    cargarProductos();
+                    cargarHistorial();
+                } else {
+                    // Si los datos están corruptos, limpiamos y pedimos registro de nuevo
+                    logger('Sesión corrupta o incompleta. Borrando y pidiendo datos...', 'warn');
+                    localStorage.removeItem('waterApp_session');
+                    document.getElementById('setup-section').classList.add('active');
+                    initLocation();
+                }
             } else {
                 logger('No hay sesión. Solicitando ubicación.');
                 document.getElementById('setup-section').classList.add('active');
@@ -515,7 +524,6 @@
         document.getElementById('btn-plus').addEventListener('click', () => { cantidad++; actualizarResumenPedido(); });
         document.getElementById('btn-minus').addEventListener('click', () => { if (cantidad > 1) cantidad--; actualizarResumenPedido(); });
 
-        // --- LA FUNCION PROBLEMATICA CON REGISTROS AGREGADOS ---
         document.getElementById('btn-realizar-pedido').addEventListener('click', async () => {
             if (!productoSeleccionado || !clienteActual) {
                 logger('Intento de pedido fallido: Faltan datos (producto o cliente).', 'error');
@@ -557,7 +565,6 @@
                 
                 logger('Código de estado HTTP de pedido: ' + pedidoRes.status);
                 
-                // Si la base de datos lanza un error 400 o 500, capturarlo
                 if (!pedidoRes.ok) {
                     const errRes = await pedidoRes.text();
                     throw new Error(`DB Error: ${errRes}`);
