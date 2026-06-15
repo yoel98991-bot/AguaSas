@@ -53,7 +53,6 @@
             margin-top: 4px;
         }
 
-        /* Tarjeta de ubicación */
         .location-card {
             background: var(--bg-card);
             border-radius: var(--radius-card);
@@ -68,13 +67,9 @@
             gap: 10px;
         }
 
-        .location-icon {
-            font-size: 1.8rem;
-        }
+        .location-icon { font-size: 1.8rem; }
 
-        .location-text {
-            flex: 1;
-        }
+        .location-text { flex: 1; }
 
         .location-address {
             font-weight: 500;
@@ -100,15 +95,12 @@
             box-shadow: 0 4px 12px rgba(45,104,255,0.3);
         }
 
-        .btn-secondary {
-            background: var(--bg-card-highlight);
-            color: var(--text-main);
-            box-shadow: none;
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        .input-group {
-            margin-bottom: 16px;
-        }
+        .input-group { margin-bottom: 16px; }
 
         .input-label {
             font-size: 0.8rem;
@@ -126,7 +118,6 @@
             font-size: 0.95rem;
         }
 
-        /* Catálogo */
         .catalog {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -149,9 +140,13 @@
             background: var(--bg-card-highlight);
         }
 
-        .product-emoji {
-            font-size: 2rem;
+        .product-card.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
         }
+
+        .product-emoji { font-size: 2rem; }
 
         .product-name {
             font-weight: 600;
@@ -163,7 +158,12 @@
             font-weight: 700;
         }
 
-        /* Pedido */
+        .product-available {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
         .order-section {
             background: var(--bg-card);
             border-radius: var(--radius-card);
@@ -189,7 +189,6 @@
             font-size: 1.2rem;
         }
 
-        /* Historial */
         .history-item {
             background: var(--bg-card);
             border-radius: var(--radius-card);
@@ -205,20 +204,9 @@
             font-weight: 600;
         }
 
-        .badge-pendiente {
-            background: rgba(234,179,8,0.2);
-            color: #facc15;
-        }
-
-        .badge-en_ruta {
-            background: rgba(45,104,255,0.2);
-            color: #60a5fa;
-        }
-
-        .badge-completado {
-            background: rgba(34,197,94,0.2);
-            color: #4ade80;
-        }
+        .badge-pendiente { background: rgba(234,179,8,0.2); color: #facc15; }
+        .badge-en_ruta { background: rgba(45,104,255,0.2); color: #60a5fa; }
+        .badge-completado { background: rgba(34,197,94,0.2); color: #4ade80; }
 
         .tab-bar {
             display: flex;
@@ -242,13 +230,8 @@
             color: white;
         }
 
-        .view {
-            display: none;
-        }
-
-        .view.active {
-            display: block;
-        }
+        .view { display: none; }
+        .view.active { display: block; }
     </style>
 </head>
 <body>
@@ -258,7 +241,7 @@
             <div class="subtitle">Pedí agua en minutos</div>
         </div>
 
-        <!-- Teléfono y ubicación -->
+        <!-- Setup (teléfono y ubicación) -->
         <div id="setup-section" class="view active">
             <div class="location-card">
                 <div class="input-group">
@@ -276,7 +259,7 @@
             </div>
         </div>
 
-        <!-- App principal (pedidos) -->
+        <!-- App principal -->
         <div id="app-section" class="view">
             <div class="tab-bar">
                 <div class="tab active" data-tab="pedir">Pedir</div>
@@ -295,9 +278,9 @@
                     <div class="order-summary">
                         <span>Cantidad</span>
                         <span>
-                            <button id="btn-minus" style="background: transparent; border: none; color: var(--text-main); font-size: 1.2rem;">−</button>
+                            <button id="btn-minus" style="background:transparent;border:none;color:var(--text-main);font-size:1.2rem;">−</button>
                             <span id="cantidad">1</span>
-                            <button id="btn-plus" style="background: transparent; border: none; color: var(--text-main); font-size: 1.2rem;">+</button>
+                            <button id="btn-plus" style="background:transparent;border:none;color:var(--text-main);font-size:1.2rem;">+</button>
                         </span>
                     </div>
                     <div class="order-summary total">
@@ -321,11 +304,18 @@
         const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
 
-        let clienteActual = null; // { id, telefono, lat, lng }
+        const headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json"
+        };
+
+        let clienteActual = null;
         let ubicacionActual = null;
         let direccionLegible = "";
         let productoSeleccionado = null;
         let cantidad = 1;
+        let stockActualLitros = 0;
 
         // Inicializar ubicación
         function initLocation() {
@@ -334,7 +324,6 @@
                     async (pos) => {
                         ubicacionActual = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                         document.getElementById('coords-text').textContent = `${ubicacionActual.lat.toFixed(6)}, ${ubicacionActual.lng.toFixed(6)}`;
-                        // Geocodificación inversa (OpenStreetMap Nominatim)
                         try {
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${ubicacionActual.lat}&lon=${ubicacionActual.lng}`);
                             const data = await res.json();
@@ -355,25 +344,14 @@
             }
         }
 
-        // Buscar o crear cliente en Supabase por teléfono
+        // Buscar o crear cliente
         async function encontrarOCrearCliente(telefono) {
-            // Buscar cliente por teléfono
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?telefono=eq.${telefono}&select=*`, {
-                headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
-            });
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?telefono=eq.${telefono}&select=*`, { headers });
             const clientes = await res.json();
-            if (clientes.length > 0) {
-                return clientes[0];
-            }
-            // Crear nuevo cliente
+            if (clientes.length > 0) return clientes[0];
             const nuevo = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
                 method: 'POST',
-                headers: {
-                    "apikey": SUPABASE_ANON_KEY,
-                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-                    "Content-Type": "application/json",
-                    "Prefer": "return=representation"
-                },
+                headers: { ...headers, 'Prefer': 'return=representation' },
                 body: JSON.stringify({
                     nombre: "Cliente App",
                     telefono: telefono,
@@ -385,50 +363,63 @@
             return (await nuevo.json())[0];
         }
 
-        // Iniciar sesión / setup
+        // Confirmar setup
         document.getElementById('btn-confirmar-ubicacion').addEventListener('click', async () => {
             const telefono = document.getElementById('telefono').value.trim();
             if (!telefono) return alert("Ingresá tu teléfono");
             if (!ubicacionActual) return alert("Esperá la ubicación...");
-            document.getElementById('btn-confirmar-ubicacion').disabled = true;
-            document.getElementById('btn-confirmar-ubicacion').textContent = "Cargando...";
+            const btn = document.getElementById('btn-confirmar-ubicacion');
+            btn.disabled = true; btn.textContent = "Cargando...";
             try {
                 clienteActual = await encontrarOCrearCliente(telefono);
                 document.getElementById('setup-section').classList.remove('active');
                 document.getElementById('app-section').classList.add('active');
-                cargarProductos();
+                await cargarProductos();
                 cargarHistorial();
             } catch (e) {
                 alert("Error conectando al servidor: " + e.message);
             }
-            document.getElementById('btn-confirmar-ubicacion').disabled = false;
-            document.getElementById('btn-confirmar-ubicacion').textContent = "Confirmar y Empezar";
+            btn.disabled = false; btn.textContent = "Confirmar y Empezar";
         });
 
-        // Cargar productos desde Supabase
+        // Cargar productos y stock
         async function cargarProductos() {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/productos?select=*`, {
-                headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
-            });
+            try {
+                // Obtener stock
+                const [stockRes] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=litros_disponibles&limit=1`, { headers }).then(r => r.json());
+                stockActualLitros = stockRes?.litros_disponibles || 0;
+            } catch (e) {
+                stockActualLitros = 0;
+            }
+
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/productos?select=*&order=id.asc`, { headers });
             const productos = await res.json();
+
             const catalog = document.getElementById('catalog');
-            catalog.innerHTML = productos.map(p => `
-                <div class="product-card" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}">
-                    <div class="product-emoji">💧</div>
-                    <div class="product-name">${p.nombre}</div>
-                    <div class="product-price">$${p.precio}</div>
-                </div>
-            `).join('');
+            catalog.innerHTML = productos.map(p => {
+                const capacidad = p.capacidad_litros || 0;
+                const disponibles = capacidad > 0 ? Math.floor(stockActualLitros / capacidad) : 0;
+                const sinStock = disponibles <= 0;
+                return `
+                    <div class="product-card ${sinStock ? 'disabled' : ''}" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-litros="${capacidad}">
+                        <div class="product-emoji">💧</div>
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-price">$${p.precio}</div>
+                        <div class="product-available">${capacidad} L - ${sinStock ? 'Agotado' : `${disponibles} disponibles`}</div>
+                    </div>
+                `;
+            }).join('');
 
             // Seleccionar producto
-            document.querySelectorAll('.product-card').forEach(card => {
+            document.querySelectorAll('.product-card:not(.disabled)').forEach(card => {
                 card.addEventListener('click', () => {
                     document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
                     productoSeleccionado = {
                         id: card.dataset.id,
                         nombre: card.dataset.nombre,
-                        precio: parseFloat(card.dataset.precio)
+                        precio: parseFloat(card.dataset.precio),
+                        capacidad_litros: parseInt(card.dataset.litros) || 0
                     };
                     cantidad = 1;
                     actualizarResumenPedido();
@@ -447,19 +438,22 @@
         document.getElementById('btn-plus').addEventListener('click', () => { cantidad++; actualizarResumenPedido(); });
         document.getElementById('btn-minus').addEventListener('click', () => { if (cantidad > 1) cantidad--; actualizarResumenPedido(); });
 
-        // Realizar pedido
+        // Realizar pedido (con descuento de stock)
         document.getElementById('btn-realizar-pedido').addEventListener('click', async () => {
             if (!productoSeleccionado || !clienteActual) return;
             const montoTotal = productoSeleccionado.precio * cantidad;
+            const litrosADescontar = productoSeleccionado.capacidad_litros * cantidad;
+
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
+                // Verificar stock suficiente
+                if (litrosADescontar > 0 && litrosADescontar > stockActualLitros) {
+                    return alert('No hay suficiente agua en stock para este pedido.');
+                }
+
+                // Crear pedido
+                const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
                     method: 'POST',
-                    headers: {
-                        "apikey": SUPABASE_ANON_KEY,
-                        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-                        "Content-Type": "application/json",
-                        "Prefer": "return=representation"
-                    },
+                    headers: { ...headers, 'Prefer': 'return=representation' },
                     body: JSON.stringify({
                         cliente_id: clienteActual.id,
                         producto_id: productoSeleccionado.id,
@@ -469,13 +463,26 @@
                         estado: 'pendiente'
                     })
                 });
-                const nuevoPedido = await res.json();
+                const nuevoPedido = await pedidoRes.json();
+
                 if (nuevoPedido && nuevoPedido[0]) {
+                    // Descontar stock
+                    if (litrosADescontar > 0) {
+                        const [stock] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=id,litros_disponibles&limit=1`, { headers }).then(r => r.json());
+                        const nuevoStock = stock.litros_disponibles - litrosADescontar;
+                        await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stock.id}`, {
+                            method: 'PATCH',
+                            headers: { ...headers, 'Prefer': 'return=minimal' },
+                            body: JSON.stringify({ litros_disponibles: nuevoStock })
+                        });
+                        stockActualLitros = nuevoStock;
+                    }
+
                     alert("¡Pedido realizado con éxito!");
-                    // Limpiar selección
                     productoSeleccionado = null;
                     document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
                     document.getElementById('order-summary').style.display = 'none';
+                    cargarProductos(); // refrescar disponibilidad
                     cargarHistorial();
                 } else {
                     throw new Error("Respuesta inesperada");
@@ -485,27 +492,25 @@
             }
         });
 
-        // Cargar historial de pedidos del cliente
+        // Cargar historial
         async function cargarHistorial() {
             if (!clienteActual) return;
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&select=id,productos(nombre),monto,estado,fecha_pedido&order=fecha_pedido.desc`, {
-                headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
-            });
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&select=id,productos(nombre),monto,estado,fecha_pedido&order=fecha_pedido.desc`, { headers });
             const pedidos = await res.json();
             const container = document.getElementById('historial-list');
             if (pedidos.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted);">No tenés pedidos todavía.</p>';
+                container.innerHTML = '<p style="color:var(--text-muted);">No tenés pedidos todavía.</p>';
                 return;
             }
             container.innerHTML = pedidos.map(p => {
                 const badgeClass = `badge-${p.estado}`;
                 return `
                     <div class="history-item">
-                        <div style="display: flex; justify-content: space-between;">
+                        <div style="display:flex;justify-content:space-between;">
                             <strong>${p.productos?.nombre || 'Producto'}</strong>
                             <span class="badge ${badgeClass}">${p.estado}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 8px; color: var(--text-muted);">
+                        <div style="display:flex;justify-content:space-between;margin-top:8px;color:var(--text-muted);">
                             <span>${new Date(p.fecha_pedido).toLocaleDateString()}</span>
                             <span>$${p.monto}</span>
                         </div>
