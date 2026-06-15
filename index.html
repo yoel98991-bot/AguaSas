@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Water SaaS - Cliente</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -54,7 +52,6 @@
         .logo i { color: var(--primary-blue); }
         .subtitle { color: var(--text-muted); font-size: 0.9rem; font-weight: 400; }
 
-        /* --- Setup Section --- */
         .setup-wrapper { display: flex; flex-direction: column; gap: 24px; }
         .location-card {
             background: var(--bg-card); border: 1px solid var(--border-color);
@@ -78,7 +75,6 @@
         }
         .input:focus { border-color: var(--primary-blue); }
 
-        /* --- Buttons --- */
         .btn {
             background: var(--text-main); color: var(--bg-app); border: none;
             border-radius: var(--radius-button); padding: 16px 24px; font-weight: 600;
@@ -90,7 +86,6 @@
         .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* --- App Section --- */
         .catalog { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
         .product-card {
             background: var(--bg-app); border: 1px solid var(--border-color);
@@ -105,7 +100,6 @@
         .product-price { color: var(--text-main); font-weight: 700; font-size: 1.1rem; }
         .product-available { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; }
 
-        /* --- Orders & History --- */
         .order-section {
             background: var(--bg-card); border: 1px solid var(--border-color);
             border-radius: var(--radius-card); padding: 24px; margin-bottom: 24px;
@@ -139,7 +133,6 @@
         .badge-completado { background: rgba(34,197,94,0.1); color: var(--success-green); border: 1px solid rgba(34,197,94,0.2); }
         .history-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); }
 
-        /* --- Tabs --- */
         .tab-bar {
             display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-card);
             padding: 6px; border-radius: var(--radius-pill); border: 1px solid var(--border-color);
@@ -154,7 +147,6 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- MAPA Y SEGUIMIENTO --- */
         .tracking-container {
             position: relative;
             height: 350px;
@@ -192,28 +184,12 @@
             gap: 16px;
         }
 
-        /* Leaflet Dark Mode Tweaks */
         .leaflet-layer,
         .leaflet-control-zoom-in,
         .leaflet-control-zoom-out,
         .leaflet-control-attribution {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
-
-        /* --- DEBUG CONSOLE --- */
-        #debug-console {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 220px;
-            background: rgba(0, 0, 0, 0.95); border-top: 2px solid #3b82f6;
-            z-index: 99999; display: flex; flex-direction: column;
-            font-family: monospace; font-size: 11px; box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-        }
-        #debug-header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #111; padding: 8px 12px; color: #fff; font-weight: bold;
-        }
-        #debug-logs { flex: 1; overflow-y: auto; padding: 10px; color: #4ade80; white-space: pre-wrap; word-wrap: break-word; }
-        .log-error { color: #f87171 !important; }
-        .log-warn { color: #facc15 !important; }
     </style>
 </head>
 <body>
@@ -223,7 +199,7 @@
             <div class="subtitle">Agua purificada a tu puerta</div>
         </div>
 
-        <div id="setup-section" class="view">
+        <div id="setup-section" class="view active">
             <div class="setup-wrapper">
                 <div class="location-card">
                     <div class="input-group">
@@ -295,7 +271,7 @@
                         <div class="tracking-container">
                             <div id="map"></div>
                             <div class="map-overlay" id="map-overlay">
-                                <i data-lucide="loader" class="spin" style="color: var(--primary-blue); width: 32px; height: 32px; margin-bottom: 16px;"></i>
+                                <i data-lucide="loader" style="color: var(--primary-blue); width: 32px; height: 32px; margin-bottom: 16px;"></i>
                                 <h3 style="margin-bottom: 8px;">Esperando confirmación</h3>
                                 <p style="font-size: 0.85rem; color: var(--text-muted);">Estamos asignando un repartidor a tu pedido. En breve verás la ruta.</p>
                             </div>
@@ -321,45 +297,9 @@
         </div>
     </div>
 
-    <div id="debug-console">
-        <div id="debug-header">
-            <span>Terminal de Depuración</span>
-            <div style="display: flex; gap: 8px;">
-                <button onclick="copyLogs()" style="background:#3b82f6; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-weight:bold;">Copiar Logs</button>
-                <button onclick="document.getElementById('debug-console').style.display='none'" style="background:#ef4444; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-weight:bold;">X</button>
-            </div>
-        </div>
-        <div id="debug-logs"></div>
-    </div>
-
     <script>
-        // --- SISTEMA DE LOGS ---
-        function logger(msg, type = 'info') {
-            const logsBox = document.getElementById('debug-logs');
-            const line = document.createElement('div');
-            let text = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg;
-            line.textContent = `[${new Date().toLocaleTimeString()}] > ${text}`;
-            if(type === 'error') line.className = 'log-error';
-            if(type === 'warn') line.className = 'log-warn';
-            logsBox.appendChild(line);
-            logsBox.scrollTop = logsBox.scrollHeight;
-        }
-
-        window.onerror = function(msg, url, line) {
-            logger(`CRITICAL ERROR: ${msg} en línea ${line}`, 'error');
-        };
-
-        function copyLogs() {
-            const text = document.getElementById('debug-logs').innerText;
-            navigator.clipboard.writeText(text).then(() => alert('¡Código copiado!')).catch(err => logger('Fallo al copiar: ' + err, 'error'));
-        }
-        // -------------------------
-
-        lucide.createIcons();
-
         const SUPABASE_URL = "https://wzixsohxprcobfsmiksf.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
-
         const headers = {
             "apikey": SUPABASE_ANON_KEY,
             "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
@@ -373,39 +313,32 @@
         let cantidad = 1;
         let stockActualLitros = 0;
         
-        // Variables del mapa
         let mapaInstancia = null;
         let rutaLinea = null;
         let marcadorCliente = null;
         let marcadorRepartidor = null;
         let pedidoActivoInterval = null;
 
+        lucide.createIcons();
+
         function checkSession() {
-            logger('Revisando sesión en LocalStorage...');
             const savedSession = localStorage.getItem('waterApp_session');
             if (savedSession) {
                 const sessionData = JSON.parse(savedSession);
-                
-                // Validamos que exista cliente y tenga nombre
                 if (sessionData && sessionData.clienteActual && sessionData.clienteActual.id) {
-                    logger('Sesión válida encontrada.');
                     clienteActual = sessionData.clienteActual;
                     ubicacionActual = sessionData.ubicacionActual;
                     direccionLegible = sessionData.direccionLegible;
-
                     document.getElementById('setup-section').classList.remove('active');
                     document.getElementById('app-section').classList.add('active');
-
                     cargarProductos();
                     cargarHistorial();
                 } else {
-                    logger('Sesión corrupta. Borrando...', 'warn');
                     localStorage.removeItem('waterApp_session');
                     document.getElementById('setup-section').classList.add('active');
                     initLocation();
                 }
             } else {
-                logger('No hay sesión. Mostrando registro.');
                 document.getElementById('setup-section').classList.add('active');
                 initLocation();
             }
@@ -413,7 +346,6 @@
 
         function initLocation() {
             if (navigator.geolocation) {
-                logger('Iniciando GPS...');
                 navigator.geolocation.getCurrentPosition(
                     async (pos) => {
                         ubicacionActual = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -429,7 +361,6 @@
                         }
                     },
                     (err) => {
-                        logger('Error GPS: ' + err.message, 'error');
                         alert("Necesitamos tu ubicación. Activa el GPS.");
                     }
                 );
@@ -437,17 +368,9 @@
         }
 
         async function encontrarOCrearCliente(nombre, telefono) {
-            logger(`Buscando cliente con teléfono: ${telefono}`);
             const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?telefono=eq.${telefono}&select=*`, { headers });
             const clientes = await res.json();
-            
-            if (clientes.length > 0) {
-                logger('Cliente existente encontrado.');
-                // Opcional: Actualizar nombre si cambió
-                return clientes[0];
-            }
-            
-            logger(`Creando nuevo cliente: ${nombre}`);
+            if (clientes.length > 0) return clientes[0];
             const nuevo = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
                 method: 'POST',
                 headers: { ...headers, 'Prefer': 'return=representation' },
@@ -465,38 +388,30 @@
         document.getElementById('btn-confirmar-ubicacion').addEventListener('click', async () => {
             const nombre = document.getElementById('nombre').value.trim();
             const telefono = document.getElementById('telefono').value.trim();
-            
             if (!nombre) return alert("Ingresá tu nombre");
             if (!telefono) return alert("Ingresá tu teléfono");
             if (!ubicacionActual) return alert("Esperá la ubicación...");
             
             const btn = document.getElementById('btn-confirmar-ubicacion');
-            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader" class="spin"></i> Procesando...`;
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader"></i> Procesando...`;
             lucide.createIcons();
 
             try {
                 clienteActual = await encontrarOCrearCliente(nombre, telefono);
-                logger('Cliente validado. ID: ' + clienteActual.id);
-                
                 localStorage.setItem('waterApp_session', JSON.stringify({
                     clienteActual, ubicacionActual, direccionLegible
                 }));
-
                 document.getElementById('setup-section').classList.remove('active');
                 document.getElementById('app-section').classList.add('active');
-                
                 await cargarProductos();
                 cargarHistorial();
             } catch (e) {
-                logger('Error validando cliente: ' + e.message, 'error');
                 alert("Error conectando al servidor.");
             }
-            
             btn.disabled = false; btn.innerHTML = `Continuar <i data-lucide="arrow-right" style="width: 18px;"></i>`;
             lucide.createIcons();
         });
 
-        // Catálogo y Pedido (Igual que antes)
         async function cargarProductos() {
             try {
                 const [stockRes] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=litros_disponibles&limit=1`, { headers }).then(r => r.json());
@@ -547,7 +462,6 @@
             if (!productoSeleccionado || !clienteActual) return;
             const montoTotal = productoSeleccionado.precio * cantidad;
             const litrosADescontar = productoSeleccionado.capacidad_litros * cantidad;
-            
             const btn = document.getElementById('btn-realizar-pedido');
             btn.disabled = true;
 
@@ -556,11 +470,10 @@
                     btn.disabled = false; return alert('Stock insuficiente.');
                 }
 
-                const payload = { cliente_id: clienteActual.id, producto_id: productoSeleccionado.id, lat: ubicacionActual.lat, lng: ubicacionActual.lng, monto: montoTotal, estado: 'pendiente' };
                 const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
-                    method: 'POST', headers: { ...headers, 'Prefer': 'return=representation' }, body: JSON.stringify(payload)
+                    method: 'POST', headers: { ...headers, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ cliente_id: clienteActual.id, producto_id: productoSeleccionado.id, lat: ubicacionActual.lat, lng: ubicacionActual.lng, monto: montoTotal, estado: 'pendiente' })
                 });
-                
                 if (!pedidoRes.ok) throw new Error(await pedidoRes.text());
                 const nuevoPedido = await pedidoRes.json();
 
@@ -569,16 +482,13 @@
                         const [stock] = await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?select=id,litros_disponibles&limit=1`, { headers }).then(r => r.json());
                         await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stock.id}`, { method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' }, body: JSON.stringify({ litros_disponibles: stock.litros_disponibles - litrosADescontar }) });
                     }
-                    
                     alert("¡Pedido realizado!");
                     document.getElementById('order-summary').style.display = 'none';
                     cargarProductos(); cargarHistorial();
-                    
-                    // Automáticamente saltar a la pestaña de seguimiento
                     document.querySelector('[data-tab="seguimiento"]').click();
                 }
             } catch (e) {
-                logger('ERROR PEDIDO: ' + e.message, 'error'); alert("Error al crear pedido.");
+                alert("Error al crear pedido.");
             }
             btn.disabled = false;
         });
@@ -588,12 +498,10 @@
             const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&select=id,productos(nombre),monto,estado,fecha_pedido&order=fecha_pedido.desc`, { headers });
             const pedidos = await res.json();
             const container = document.getElementById('historial-list');
-            
             if (pedidos.length === 0) {
                 container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--text-muted);"><p>Sin pedidos.</p></div>`;
                 return;
             }
-            
             container.innerHTML = pedidos.map(p => {
                 const badgeClass = `badge-${p.estado}`;
                 return `
@@ -611,16 +519,34 @@
             lucide.createIcons();
         }
 
-        // --- LÓGICA DEL MAPA Y SEGUIMIENTO ---
+        // --- LÓGICA DEL MAPA Y SEGUIMIENTO CON ANIMACIÓN SUAVE ---
+        function animarMarcador(marker, newLatLng, duracion = 1000) {
+            const inicio = marker.getLatLng();
+            const inicioTiempo = performance.now();
+
+            function cuadro(tiempoActual) {
+                const transcurrido = tiempoActual - inicioTiempo;
+                const progreso = Math.min(transcurrido / duracion, 1);
+
+                const lat = inicio.lat + (newLatLng.lat - inicio.lat) * progreso;
+                const lng = inicio.lng + (newLatLng.lng - inicio.lng) * progreso;
+
+                marker.setLatLng([lat, lng]);
+
+                if (progreso < 1) {
+                    requestAnimationFrame(cuadro);
+                }
+            }
+
+            requestAnimationFrame(cuadro);
+        }
+
         function inicializarMapa(lat, lng) {
             if (!mapaInstancia) {
-                // Configuración inicial de Leaflet
                 mapaInstancia = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                     attribution: '&copy; OpenStreetMap'
                 }).addTo(mapaInstancia);
-
-                // Icono cliente
                 const clientIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
                 marcadorCliente = L.marker([lat, lng], { icon: clientIcon }).addTo(mapaInstancia);
             }
@@ -628,20 +554,17 @@
 
         async function rastrearPedidoActivo() {
             if (!clienteActual) return;
-            
             try {
-                // Buscamos el pedido más reciente que NO esté completado ni cancelado
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&estado=in.(pendiente,en_ruta)&order=fecha_pedido.desc&limit=1`, { headers });
+                // Pedimos también chofer_id para poder consultar su ubicación
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?cliente_id=eq.${clienteActual.id}&estado=in.(pendiente,en_ruta)&select=id,estado,chofer_id&order=fecha_pedido.desc&limit=1`, { headers });
                 const pedidosActivos = await res.json();
 
                 if (pedidosActivos.length > 0) {
                     const pedido = pedidosActivos[0];
                     document.getElementById('no-active-order').style.display = 'none';
                     document.getElementById('active-order-map').style.display = 'block';
-                    
-                    // Inicializamos el mapa en la ubicación del cliente
                     inicializarMapa(ubicacionActual.lat, ubicacionActual.lng);
-                    setTimeout(() => mapaInstancia.invalidateSize(), 300); // Fix para mapas ocultos
+                    setTimeout(() => mapaInstancia.invalidateSize(), 300);
 
                     if (pedido.estado === 'pendiente') {
                         document.getElementById('map-overlay').classList.remove('hidden');
@@ -652,35 +575,43 @@
                     else if (pedido.estado === 'en_ruta') {
                         document.getElementById('map-overlay').classList.add('hidden');
                         document.getElementById('driver-info').style.display = 'flex';
-                        
-                        // --- SIMULACIÓN DEL REPARTIDOR ---
-                        // Inventamos unas coordenadas a ~1km de distancia del cliente
-                        const driverLat = ubicacionActual.lat + 0.005;
-                        const driverLng = ubicacionActual.lng + 0.005;
 
-                        // Icono repartidor
-                        if(!marcadorRepartidor) {
-                            const driverIcon = L.divIcon({ html: '🚚', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
-                            marcadorRepartidor = L.marker([driverLat, driverLng], { icon: driverIcon }).addTo(mapaInstancia);
+                        // Obtener ubicación real del repartidor desde Supabase
+                        const ubicacionesRes = await fetch(
+                            `${SUPABASE_URL}/rest/v1/ubicaciones_repartidor?chofer_id=eq.${pedido.chofer_id || 1}&order=updated_at.desc&limit=1`,
+                            { headers }
+                        );
+                        const ubicaciones = await ubicacionesRes.json();
+
+                        if (ubicaciones.length > 0) {
+                            const { lat, lng } = ubicaciones[0];
+                            const nuevaPos = L.latLng(lat, lng);
+
+                            if (!marcadorRepartidor) {
+                                const driverIcon = L.divIcon({ html: '🚚', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+                                marcadorRepartidor = L.marker(nuevaPos, { icon: driverIcon }).addTo(mapaInstancia);
+                            } else {
+                                // Animación suave del repartidor
+                                animarMarcador(marcadorRepartidor, nuevaPos, 1000);
+                            }
+
+                            // Redibujar línea de ruta azul
+                            if (rutaLinea) mapaInstancia.removeLayer(rutaLinea);
+                            rutaLinea = L.polyline(
+                                [nuevaPos, [ubicacionActual.lat, ubicacionActual.lng]],
+                                { color: '#3b82f6', weight: 4, dashArray: '10, 10' }
+                            ).addTo(mapaInstancia);
+
+                            // Ajustar vista para mostrar ambos puntos
+                            mapaInstancia.fitBounds(rutaLinea.getBounds(), { padding: [30, 30] });
                         }
-
-                        // Dibujar línea de ruta
-                        if(rutaLinea) mapaInstancia.removeLayer(rutaLinea);
-                        rutaLinea = L.polyline([
-                            [driverLat, driverLng], 
-                            [ubicacionActual.lat, ubicacionActual.lng]
-                        ], { color: '#3b82f6', weight: 4, dashArray: '10, 10' }).addTo(mapaInstancia);
-
-                        // Ajustar vista para que se vean ambos
-                        mapaInstancia.fitBounds(rutaLinea.getBounds(), { padding: [30, 30] });
                     }
                 } else {
-                    // No hay pedidos activos
                     document.getElementById('no-active-order').style.display = 'block';
                     document.getElementById('active-order-map').style.display = 'none';
                 }
             } catch(e) {
-                logger("Error rastreando pedido: " + e.message, "error");
+                console.error("Error rastreando pedido:", e);
             }
         }
 
@@ -689,20 +620,16 @@
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                
                 const tabName = tab.dataset.tab;
                 document.getElementById('view-pedir').classList.toggle('active', tabName === 'pedir');
                 document.getElementById('view-seguimiento').classList.toggle('active', tabName === 'seguimiento');
                 document.getElementById('view-historial').classList.toggle('active', tabName === 'historial');
 
-                // Si entramos a seguimiento, actualizamos el estado e iniciamos polling
                 if (tabName === 'seguimiento') {
                     rastrearPedidoActivo();
-                    // Chequeamos la base de datos cada 5 segundos por si cambió a "en_ruta"
                     if(pedidoActivoInterval) clearInterval(pedidoActivoInterval);
                     pedidoActivoInterval = setInterval(rastrearPedidoActivo, 5000);
                 } else {
-                    // Detenemos el polling si salimos de la pestaña
                     if(pedidoActivoInterval) clearInterval(pedidoActivoInterval);
                 }
             });
