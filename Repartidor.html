@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-app: #09090b;
@@ -143,7 +144,7 @@
             <p id="login-error" style="color: #ef4444; font-size: 0.8rem; display: none;"></p>
         </div>
 
-        <!-- Zona de trabajo (oculta hasta login) -->
+        <!-- Zona de trabajo -->
         <div id="work-section" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <span id="chofer-nombre" style="font-weight: 600;"></span>
@@ -160,6 +161,7 @@
                 <p><strong>Teléfono:</strong> <span id="ruta-telefono"></span></p>
                 <p><strong>Monto:</strong> $<span id="ruta-monto"></span></p>
                 <button class="btn btn-success" id="btn-entregar">Entregar Pedido</button>
+                <p id="error-venta" style="color: #ef4444; font-size: 0.8rem; margin-top: 8px; display: none;"></p>
             </div>
 
             <!-- Lista de pendientes -->
@@ -178,15 +180,22 @@
             "Content-Type": "application/json"
         };
 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let choferActual = null;
         let mapa = null;
         let marcadorChofer = null;
         let marcadorCliente = null;
         let miUbicacion = null;
         let envioUbicacionInterval = null;
-        let pedidoEnRuta = null; // { id, latCliente, lngCliente, choferId, cliente_id, monto, cliente_nombre, cliente_direccion, cliente_telefono }
+        let pedidoEnRuta = null;
+        let canalesActivos = [];
 
-        // --- LOGIN ---
+        function unsubscribeAll() {
+            canalesActivos.forEach(ch => supabaseClient.removeChannel(ch));
+            canalesActivos = [];
+        }
+
         document.getElementById('btn-ingresar').addEventListener('click', async () => {
             const telefono = document.getElementById('telefonoChofer').value.trim();
             if (!telefono) {
@@ -224,13 +233,13 @@
                 return;
             }
             if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
+            unsubscribeAll();
             choferActual = null;
             document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('work-section').classList.add('hidden');
             document.getElementById('telefonoChofer').value = '';
         });
 
-        // --- INICIALIZAR ---
         async function iniciarApp() {
             try {
                 miUbicacion = await getCurrentPosition();
@@ -239,8 +248,10 @@
                 alert('Activa el GPS para usar esta app.');
                 initMap(-34.61, -58.37);
             }
+            await recuperarPedidoEnRuta();
             await cargarPedidos();
-            setInterval(cargarPedidos, 30000);
+            // Suscripción a nuevos pedidos pendientes
+            subscribePendientes();
         }
 
         function initMap(lat, lng) {
@@ -262,10 +273,61 @@
             });
         }
 
-        // --- CARGAR PEDIDOS PENDIENTES (y mostrarlos solo si no hay uno en curso) ---
+        async function recuperarPedidoEnRuta() {
+            if (!choferActual) return;
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?chofer_id=eq.${choferActual.id}&estado=eq.en_ruta&select=id,lat,lng,cliente_id,monto,clientes(nombre,direccion,telefono)&limit=1`, { headers });
+                const pedidos = await res.json();
+                if (pedidos.length > 0) {
+                    const p = pedidos[0];
+                    const cliente = p.clientes || {};
+                    pedidoEnRuta = {
+                        id: p.id,
+                        latCliente: p.lat,
+                        lngCliente: p.lng,
+                        choferId: choferActual.id,
+                        cliente_id: p.cliente_id,
+                        monto: p.monto,
+                        cliente_nombre: cliente.nombre,
+                        cliente_direccion: cliente.direccion,
+                        cliente_telefono: cliente.telefono
+                    };
+                    document.getElementById('ruta-cliente').textContent = cliente.nombre || '-';
+                    document.getElementById('ruta-direccion').textContent = cliente.direccion || '-';
+                    document.getElementById('ruta-telefono').textContent = cliente.telefono || '-';
+                    document.getElementById('ruta-monto').textContent = p.monto;
+                    document.getElementById('pedido-en-ruta').classList.remove('hidden');
+                    document.getElementById('lista-pendientes').classList.add('hidden');
+
+                    if (marcadorCliente) mapa.removeLayer(marcadorCliente);
+                    const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+                    marcadorCliente = L.marker([p.lat, p.lng], { icon: clienteIcon }).addTo(mapa);
+                    if (miUbicacion) {
+                        const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [p.lat, p.lng]]);
+                        mapa.fitBounds(bounds, { padding: [30, 30] });
+                    }
+
+                    if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
+                    envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
+                }
+            } catch (error) {
+                console.error('Error al recuperar pedido en ruta:', error);
+            }
+        }
+
+        function subscribePendientes() {
+            unsubscribeAll();
+            const channel = supabaseClient
+                .channel('pendientes-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos', filter: 'estado=eq.pendiente' }, () => {
+                    if (!pedidoEnRuta) cargarPedidos();
+                })
+                .subscribe();
+            canalesActivos.push(channel);
+        }
+
         async function cargarPedidos() {
             if (!choferActual || !miUbicacion) return;
-            // Si hay un pedido en curso, no mostramos la lista de pendientes
             if (pedidoEnRuta) {
                 document.getElementById('lista-pendientes').classList.add('hidden');
                 return;
@@ -275,7 +337,6 @@
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.pendiente&select=id,monto,fecha_pedido,lat,lng,cliente_id,clientes(nombre,direccion,telefono)&order=fecha_pedido.asc`, { headers });
                 const pedidos = await res.json();
 
-                // Limpiar marcadores de pedidos anteriores
                 if (marcadorCliente) { mapa.removeLayer(marcadorCliente); marcadorCliente = null; }
 
                 const pedidosConDistancia = pedidos.map(p => {
@@ -307,7 +368,6 @@
                     `;
                 }).join('');
 
-                // Marcadores solo del chofer, no ponemos marcadores de todos los pedidos para no saturar
                 if (marcadorChofer) mapa.removeLayer(marcadorChofer);
                 const choferIcon = L.divIcon({ html: '🚚', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
                 marcadorChofer = L.marker([miUbicacion.lat, miUbicacion.lng], { icon: choferIcon }).addTo(mapa);
@@ -318,7 +378,6 @@
             }
         }
 
-        // --- TOMAR PEDIDO ---
         window.tomarPedido = async function(pedidoId, latCliente, lngCliente, clienteId, nombreCliente, direccionCliente, telefonoCliente, monto) {
             if (!choferActual) return;
             if (!confirm('¿Confirmar que tomas este pedido?')) return;
@@ -343,7 +402,6 @@
                     cliente_telefono: telefonoCliente
                 };
 
-                // Mostrar sección de pedido en curso
                 document.getElementById('ruta-cliente').textContent = nombreCliente;
                 document.getElementById('ruta-direccion').textContent = direccionCliente;
                 document.getElementById('ruta-telefono').textContent = telefonoCliente;
@@ -351,38 +409,35 @@
                 document.getElementById('pedido-en-ruta').classList.remove('hidden');
                 document.getElementById('lista-pendientes').classList.add('hidden');
 
-                // Limpiar mapa y poner marcador del cliente
                 if (marcadorCliente) mapa.removeLayer(marcadorCliente);
                 const clienteIcon = L.divIcon({ html: '📍', className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
                 marcadorCliente = L.marker([latCliente, lngCliente], { icon: clienteIcon }).addTo(mapa);
-                // Ajustar vista para que se vean ambos
                 const bounds = L.latLngBounds([[miUbicacion.lat, miUbicacion.lng], [latCliente, lngCliente]]);
                 mapa.fitBounds(bounds, { padding: [30, 30] });
 
-                // Iniciar envío de ubicación
                 if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
                 envioUbicacionInterval = setInterval(enviarUbicacion, 5000);
                 await enviarUbicacion();
             } catch (error) {
-                alert('Error: ' + error.message);
+                alert('Error al tomar pedido: ' + error.message);
             }
         };
 
-        // --- ENTREGAR PEDIDO ---
+        // Entregar pedido con depuración
         document.getElementById('btn-entregar').addEventListener('click', async () => {
             if (!pedidoEnRuta) return;
             if (!confirm('¿Confirmar entrega del pedido?')) return;
+            document.getElementById('error-venta').style.display = 'none';
             try {
-                // Cambiar estado a completado y registrar venta
                 const now = new Date().toISOString();
-                // Patch pedido
-                await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoEnRuta.id}`, {
+                const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoEnRuta.id}`, {
                     method: 'PATCH',
                     headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({ estado: 'completado', fecha_entrega: now })
                 });
-                // Insertar venta
-                await fetch(`${SUPABASE_URL}/rest/v1/ventas`, {
+                if (!patchRes.ok) throw new Error('Error al actualizar pedido: ' + await patchRes.text());
+
+                const ventaRes = await fetch(`${SUPABASE_URL}/rest/v1/ventas`, {
                     method: 'POST',
                     headers: { ...headers, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({
@@ -395,7 +450,14 @@
                     })
                 });
 
-                // Limpiar estado
+                if (!ventaRes.ok) {
+                    const errorText = await ventaRes.text();
+                    console.error('Error al insertar venta:', errorText);
+                    document.getElementById('error-venta').textContent = 'Error al guardar venta: ' + errorText;
+                    document.getElementById('error-venta').style.display = 'block';
+                    return;
+                }
+
                 pedidoEnRuta = null;
                 if (envioUbicacionInterval) clearInterval(envioUbicacionInterval);
                 if (marcadorCliente) { mapa.removeLayer(marcadorCliente); marcadorCliente = null; }
@@ -407,7 +469,6 @@
             }
         });
 
-        // Enviar ubicación periódicamente
         async function enviarUbicacion() {
             if (!pedidoEnRuta || !choferActual) return;
             try {
