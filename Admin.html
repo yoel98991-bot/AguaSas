@@ -198,6 +198,12 @@
         .btn-danger { background: var(--danger-red); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
         .btn-sm { padding: 6px 12px; font-size: 0.7rem; border-radius: 12px; }
 
+        .product-img {
+            width: 40px; height: 40px;
+            object-fit: cover; border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--bg-card);
@@ -345,6 +351,11 @@
                     <label class="input-label">Capacidad (litros)</label>
                     <input type="number" class="input" id="capacidad-producto" placeholder="20">
                 </div>
+                <!-- NUEVO: Campo para la imagen del producto -->
+                <div class="input-group">
+                    <label class="input-label">URL de la Imagen</label>
+                    <input type="text" class="input" id="imagen-producto" placeholder="https://ejemplo.com/imagen.jpg">
+                </div>
                 <button class="btn" id="btn-agregar-producto">Agregar Producto</button>
             </div>
             <div class="table-container">
@@ -429,10 +440,8 @@
             "Content-Type": "application/json"
         };
 
-        // Cliente Supabase para Real Time
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Canales de suscripción (los guardamos para poder cancelarlos al cambiar de vista)
         let activeChannels = [];
 
         function unsubscribeAll() {
@@ -440,7 +449,6 @@
             activeChannels = [];
         }
 
-        // Helpers
         async function fetchSupabase(endpoint, options = {}) {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, { headers: { ...headers, ...options.headers }, ...options });
             if (!res.ok) throw new Error(await res.text());
@@ -468,7 +476,7 @@
             container.innerHTML = html;
         }
 
-        // Dashboard (con suscripción a ventas y pedidos)
+        // Dashboard
         async function cargarDashboard() {
             const fechaHoy = hoyISO();
             const [pendientes, completadosHoy, ventasHoy, clientes] = await Promise.all([
@@ -509,7 +517,6 @@
             `).join('') : '<p style="color:var(--text-muted);padding:16px;">No hay pedidos pendientes.</p>';
         }
 
-        // Suscripciones para cada vista
         function subscribeToView(viewId) {
             unsubscribeAll();
             if (viewId === 'dashboard') {
@@ -565,7 +572,6 @@
             }
         }
 
-        // Pendientes
         async function cargarPendientes() {
             const pedidos = await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion,telefono),productos(nombre),monto,numero_recarga,estado,fecha_pedido&estado=eq.pendiente&order=fecha_pedido.asc`);
             const data = pedidos.map(p => [
@@ -576,7 +582,6 @@
             renderTable('tablaPendientes', ['ID','Cliente','Dirección','Tel','Producto','Monto','Recarga','Estado','Fecha'], data, 'No hay pedidos pendientes.');
         }
 
-        // En Ruta
         async function cargarEnRuta() {
             const pedidos = await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion),choferes(nombre),productos(nombre),monto,fecha_pedido&estado=eq.en_ruta&order=fecha_pedido.asc`);
             const data = pedidos.map(p => [
@@ -587,7 +592,6 @@
             renderTable('tablaEnRuta', ['ID','Cliente','Dirección','Repartidor','Producto','Monto','Estado','Fecha'], data, 'No hay pedidos en ruta.');
         }
 
-        // Completados
         async function cargarCompletados() {
             const pedidos = await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion),productos(nombre),monto,estado,fecha_entrega&estado=eq.completado&order=fecha_entrega.desc&limit=20`);
             const data = pedidos.map(p => [
@@ -598,7 +602,6 @@
             renderTable('tablaCompletados', ['ID','Cliente','Dirección','Producto','Monto','Estado','Entregado'], data, 'No hay completados recientes.');
         }
 
-        // Finanzas
         async function cargarFinanzas() {
             const fechaHoy = hoyISO();
             const ventas = await fetchSupabase(`ventas?select=monto_final,metodo_pago,clientes(nombre),fecha_completado&fecha_completado=gte.${fechaHoy}T03:00:00&order=fecha_completado.desc`);
@@ -608,7 +611,6 @@
             renderTable('tablaVentasHoy', ['#','Cliente','Monto','Método','Hora'], data, 'Sin ventas hoy.');
         }
 
-        // Stock
         async function cargarStock() {
             const [stockRes] = await fetchSupabase(`stock_agua?select=litros_disponibles&limit=1`);
             const litros = stockRes?.litros_disponibles || 0;
@@ -641,29 +643,41 @@
             cargarStock();
         }
 
-        // Productos
+        // Productos (con imagen)
         async function cargarProductos() {
             const productos = await fetchSupabase(`productos?select=*&order=id.asc`);
             const data = productos.map(p => [
-                p.id, p.nombre, `$${p.precio}`, `${p.capacidad_litros} L`,
+                p.id,
+                p.nombre,
+                `$${p.precio}`,
+                `${p.capacidad_litros} L`,
+                // Mostrar miniatura de imagen si existe, sino un placeholder
+                p.imagen_url
+                    ? `<img src="${p.imagen_url}" class="product-img" alt="${p.nombre}" onerror="this.style.display='none'">`
+                    : '-',
                 `<button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id})">Eliminar</button>`
             ]);
-            renderTable('tabla-productos', ['ID','Nombre','Precio','Litros','Acciones'], data, 'No hay productos todavía.');
+            renderTable('tabla-productos', ['ID','Nombre','Precio','Litros','Imagen','Acciones'], data, 'No hay productos todavía.');
         }
 
         async function agregarProducto() {
             const nombre = document.getElementById('nombre-producto').value.trim();
             const precio = parseFloat(document.getElementById('precio-producto').value);
             const capacidad = parseInt(document.getElementById('capacidad-producto').value) || null;
+            const imagen_url = document.getElementById('imagen-producto').value.trim() || null; // NUEVO
+
             if (!nombre || isNaN(precio)) return alert('Completá nombre y precio');
+
             try {
                 await fetch(`${SUPABASE_URL}/rest/v1/productos`, {
-                    method: 'POST', headers: { ...headers, 'Prefer': 'return=minimal' },
-                    body: JSON.stringify({ nombre, precio, capacidad_litros: capacidad })
+                    method: 'POST',
+                    headers: { ...headers, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ nombre, precio, capacidad_litros: capacidad, imagen_url })
                 });
                 document.getElementById('nombre-producto').value = '';
                 document.getElementById('precio-producto').value = '';
                 document.getElementById('capacidad-producto').value = '';
+                document.getElementById('imagen-producto').value = ''; // Limpiar campo imagen
                 cargarProductos();
                 cargarStock();
             } catch (e) { alert('Error: ' + e.message); }
@@ -710,14 +724,12 @@
             cargarChoferes();
         }
 
-        // Navegación con suscripciones
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.querySelector(`.nav-item[data-view="${viewId}"]`)?.classList.add('active');
 
-            // Cargar datos iniciales
             if (viewId === 'dashboard') cargarDashboard();
             else if (viewId === 'pendientes') cargarPendientes();
             else if (viewId === 'enruta') cargarEnRuta();
@@ -727,7 +739,6 @@
             else if (viewId === 'productos') cargarProductos();
             else if (viewId === 'choferes') cargarChoferes();
 
-            // Suscribirse a cambios en tiempo real para esa vista
             subscribeToView(viewId);
         }
 
