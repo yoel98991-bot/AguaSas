@@ -10,8 +10,11 @@
 :root{--bg-app:#0A0F1E;--bg-card:#151B2E;--bg-card-highlight:#1E253A;--primary-blue:#2D68FF;--text-main:#FFFFFF;--text-muted:#8A94A6;--success-green:#22C55E;--danger-red:#EF4444;--warning-yellow:#EAB308;--radius-container:32px;--radius-card:20px;--radius-button:16px;--radius-pill:9999px}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:var(--bg-app);color:var(--text-main);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.main-scroll{flex:1;overflow-y:auto;padding:20px 16px 90px;scrollbar-width:none}
+
+/* MEJORA 1: Scroll fluido para móviles */
+.main-scroll{flex:1;overflow-y:auto;padding:20px 16px 90px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .main-scroll::-webkit-scrollbar{display:none}
+
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .greeting{font-size:1.8rem;font-weight:700}
 .notification-btn{width:44px;height:44px;background:var(--bg-card);border-radius:var(--radius-button);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 4px 12px rgba(45,104,255,0.1);border:none;cursor:pointer;transition:all .2s}
@@ -69,8 +72,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg-app);color:var(--text-ma
 .order-amount{font-weight:700;font-size:1rem}
 .text-green{color:var(--success-green)}
 .text-red{color:var(--danger-red)}
+
+/* MEJORA 2: Animaciones fluidas para las vistas */
 .view{display:none}
-.view.active{display:block}
+.view.active{display:block;animation:fadeSlideIn .25s cubic-bezier(0.4,0,0.2,1) forwards}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
 .table-container{background:var(--bg-card);border-radius:var(--radius-card);overflow-x:auto;margin-top:16px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
 .table-container table{width:100%;border-collapse:collapse;min-width:600px;color:var(--text-main)}
 .table-container thead{background:var(--bg-card-highlight);position:sticky;top:0;z-index:10}
