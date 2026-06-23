@@ -7,191 +7,388 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg-app:#0A0F1E;--bg-card:#151B2E;--bg-card-highlight:#1E253A;--primary-blue:#2D68FF;--text-main:#FFFFFF;--text-muted:#8A94A6;--success-green:#22C55E;--danger-red:#EF4444;--warning-yellow:#EAB308;--radius-container:32px;--radius-card:20px;--radius-button:16px;--radius-pill:9999px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:var(--bg-app);color:var(--text-main);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+/* ================= VARIABLES & TEMA iOS ================= */
+:root {
+  --bg-app: #030816;
+  --bg-card: rgba(20, 28, 50, 0.65);
+  --bg-card-highlight: rgba(35, 46, 78, 0.8);
+  --primary-blue: #0A84FF; /* Azul iOS */
+  --primary-gradient: linear-gradient(135deg, #0A84FF 0%, #0055D4 100%);
+  --text-main: #FFFFFF;
+  --text-muted: #9BA1B0;
+  --success-green: #30D158; /* Verde iOS */
+  --danger-red: #FF453A; /* Rojo iOS */
+  --warning-yellow: #FFD60A; /* Amarillo iOS */
+  --radius-container: 32px;
+  --radius-card: 24px;
+  --radius-button: 16px;
+  --radius-pill: 9999px;
+}
 
-/* MEJORA 1: Scroll fluido para móviles */
-.main-scroll{flex:1;overflow-y:auto;padding:20px 16px 90px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.main-scroll::-webkit-scrollbar{display:none}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
 
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.greeting{font-size:1.8rem;font-weight:700}
-.notification-btn{width:44px;height:44px;background:var(--bg-card);border-radius:var(--radius-button);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 4px 12px rgba(45,104,255,0.1);border:none;cursor:pointer;transition:all .2s}
-.notification-btn:hover{background:var(--bg-card-highlight);transform:scale(1.05)}
-.notification-btn.has-unread{animation:pulse-ring 2s infinite}
-@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
-.notification-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;background:var(--danger-red);color:white;border-radius:50%;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg-app);transition:all .3s ease}
-.notification-badge.bounce{animation:badge-bounce .5s ease}
-@keyframes badge-bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
-.notification-panel{position:fixed;top:0;right:-100%;width:100%;max-width:380px;height:100vh;background:var(--bg-card);z-index:1000;transition:right .3s ease;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,0.5)}
-.notification-panel.open{right:0}
-.notification-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:999;opacity:0;visibility:hidden;transition:all .3s ease}
-.notification-overlay.open{opacity:1;visibility:visible}
-.notification-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid rgba(138,148,166,0.1)}
-.notification-header h2{font-size:1.2rem;font-weight:700}
-.notification-header .btn-close{background:var(--bg-card-highlight);border:none;color:var(--text-main);width:36px;height:36px;border-radius:var(--radius-button);cursor:pointer;display:flex;align-items:center;justify-content:center}
-.notification-list{flex:1;overflow-y:auto;padding:12px}
-.notification-item{background:var(--bg-card-highlight);border-radius:var(--radius-button);padding:14px 16px;margin-bottom:8px;border-left:3px solid var(--primary-blue);cursor:pointer;transition:all .2s}
-.notification-item:hover{background:rgba(45,104,255,0.15)}
-.notification-item.unread{border-left-color:var(--danger-red);background:rgba(239,68,68,0.08)}
-.notification-item .notif-title{font-weight:600;font-size:.85rem;margin-bottom:4px}
-.notification-item .notif-body{font-size:.75rem;color:var(--text-muted);line-height:1.4}
-.notification-item .notif-time{font-size:.7rem;color:var(--text-muted);margin-top:6px;opacity:.7}
-.notification-empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
-.notification-empty .icon{font-size:3rem;margin-bottom:12px;opacity:.4}
-.notification-footer{padding:12px 20px;border-top:1px solid rgba(138,148,166,0.1);display:flex;gap:10px}
-.notification-footer button{flex:1;background:var(--bg-card-highlight);border:1px solid rgba(138,148,166,0.2);color:var(--text-muted);padding:12px;border-radius:var(--radius-button);font-weight:500;cursor:pointer;transition:all .2s}
-.notification-footer button:hover{background:var(--primary-blue);color:white;border-color:var(--primary-blue)}
-.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none;width:90%;max-width:400px}
-.toast{background:var(--bg-card);border:1px solid rgba(45,104,255,0.3);border-radius:var(--radius-card);padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:toast-in .4s ease;pointer-events:auto}
-@keyframes toast-in{from{opacity:0;transform:translateY(-20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-.toast-icon{width:40px;height:40px;background:rgba(45,104,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.toast-content{flex:1}
-.toast-title{font-weight:600;font-size:.9rem;margin-bottom:2px}
-.toast-body{font-size:.75rem;color:var(--text-muted)}
-.toast-close{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;font-size:1.2rem;line-height:1}
-.balance-card{background:linear-gradient(135deg,#1E253A 0%,#151B2E 100%);border-radius:var(--radius-card);padding:24px;margin-bottom:24px;box-shadow:0 8px 24px rgba(45,104,255,0.12);border:1px solid rgba(45,104,255,0.15)}
-.balance-label{font-size:.85rem;color:var(--text-muted);margin-bottom:8px}
-.balance-amount{font-size:2.4rem;font-weight:800;letter-spacing:-.5px}
-.trend-row{display:flex;align-items:center;gap:8px;margin-top:12px}
-.trend-badge{background:rgba(34,197,94,0.15);color:var(--success-green);font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:var(--radius-pill);display:flex;align-items:center;gap:4px}
-.trend-period{font-size:.75rem;color:var(--text-muted)}
-.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.action-btn{background:var(--bg-card);border:none;border-radius:var(--radius-button);padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-muted);font-size:.7rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.action-btn.active{background:var(--primary-blue);color:white;box-shadow:0 6px 16px rgba(45,104,255,0.4)}
-.action-btn svg{width:24px;height:24px}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.section-title{font-size:1.2rem;font-weight:600}
-.section-link{font-size:.8rem;color:var(--primary-blue);text-decoration:none;font-weight:500}
-.order-item{background:var(--bg-card);border-radius:var(--radius-card);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-.order-icon{width:44px;height:44px;border-radius:var(--radius-button);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
-.order-info{flex:1}
-.order-title{font-weight:600;font-size:.9rem;margin-bottom:2px}
-.order-subtitle{font-size:.75rem;color:var(--text-muted)}
-.order-amount{font-weight:700;font-size:1rem}
-.text-green{color:var(--success-green)}
-.text-red{color:var(--danger-red)}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
 
-/* MEJORA 2: Animaciones fluidas para las vistas */
-.view{display:none}
-.view.active{display:block;animation:fadeSlideIn .25s cubic-bezier(0.4,0,0.2,1) forwards}
-@keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* ================= FONDO FLUIDO AZUL ================= */
+.bg-animated {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: radial-gradient(circle at 50% 50%, #060f25 0%, #02050b 100%);
+  z-index: -2;
+  overflow: hidden;
+}
+.bg-blob {
+  position: absolute;
+  filter: blur(90px);
+  opacity: 0.4;
+  border-radius: 50%;
+  animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+.blob-1 { width: 350px; height: 350px; background: #0A84FF; top: -100px; left: -100px; }
+.blob-2 { width: 450px; height: 450px; background: #00B4D8; bottom: -150px; right: -50px; animation-delay: -5s; }
+@keyframes float { 100% { transform: translate(60px, 80px) scale(1.1); } }
 
-.table-container{background:var(--bg-card);border-radius:var(--radius-card);overflow-x:auto;margin-top:16px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-.table-container table{width:100%;border-collapse:collapse;min-width:600px;color:var(--text-main)}
-.table-container thead{background:var(--bg-card-highlight);position:sticky;top:0;z-index:10}
-.table-container th{text-align:left;padding:14px 16px;font-size:.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-bottom:2px solid rgba(45,104,255,0.2)}
-.table-container td{padding:12px 16px;font-size:.85rem;border-bottom:1px solid rgba(138,148,166,0.1);color:var(--text-main);white-space:nowrap}
-.table-container tbody tr:hover{background:rgba(45,104,255,0.05)}
-.table-container tbody tr:last-child td{border-bottom:none}
-.badge{padding:4px 10px;border-radius:12px;font-size:.7rem;font-weight:600;display:inline-block}
-.badge-pendiente{background:rgba(234,179,8,0.2);color:var(--warning-yellow)}
-.badge-en_ruta{background:rgba(45,104,255,0.2);color:var(--primary-blue)}
-.badge-completado{background:rgba(34,197,94,0.2);color:var(--success-green)}
-.badge-cancelado{background:rgba(239,68,68,0.2);color:var(--danger-red)}
-.form-card{background:var(--bg-card);border-radius:var(--radius-card);padding:20px;margin-bottom:24px}
-.input-group{margin-bottom:12px}
-.input-label{display:block;font-size:.8rem;color:var(--text-muted);margin-bottom:6px}
-.input{width:100%;padding:12px 16px;background:var(--bg-card-highlight);border:1px solid rgba(138,148,166,0.2);border-radius:var(--radius-button);color:var(--text-main);font-size:.9rem}
-.btn{background:var(--primary-blue);color:white;border:none;border-radius:var(--radius-button);padding:12px 24px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(45,104,255,0.3);display:inline-flex;align-items:center;gap:8px}
-.btn-danger{background:var(--danger-red);box-shadow:0 4px 12px rgba(239,68,68,0.3)}
-.btn-sm{padding:6px 12px;font-size:.7rem;border-radius:12px}
-.product-img{width:40px;height:40px;object-fit:cover;border-radius:8px;background:rgba(255,255,255,0.05)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);display:flex;justify-content:space-between;align-items:center;padding:8px 12px 16px;border-top:1px solid rgba(138,148,166,0.1);border-radius:24px 24px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.4);overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
-.bottom-nav::-webkit-scrollbar{display:none}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-muted);font-size:.6rem;font-weight:500;background:none;border:none;cursor:pointer;white-space:nowrap;padding:6px 8px;border-radius:12px;transition:all .2s;flex:1;min-width:0}
-.nav-item.active{color:var(--primary-blue);background:rgba(45,104,255,0.1)}
-.nav-item svg{width:22px;height:22px;flex-shrink:0}
-.nav-item span{font-size:.6rem;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.empty-state{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:.9rem}
-.empty-state-icon{font-size:3rem;margin-bottom:12px;opacity:.5}
+/* ================= CONTENEDOR PRINCIPAL ================= */
+.main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: env(safe-area-inset-top, 20px) 16px calc(110px + env(safe-area-inset-bottom, 20px));
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;
+}
+.main-scroll::-webkit-scrollbar { display: none; }
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 10px; }
+.greeting { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+
+/* ================= TARJETAS (GLASSMORPHISM) ================= */
+.balance-card, .form-card, .table-container, .order-item, .notification-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-card);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.25);
+}
+
+.balance-card { padding: 24px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.balance-card::before {
+  content:''; position: absolute; top:0; left:0; width:100%; height:4px;
+  background: var(--primary-gradient);
+}
+.balance-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+.balance-amount { font-size: 2.6rem; font-weight: 800; letter-spacing: -1px; }
+
+.trend-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.trend-badge { font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: var(--radius-pill); }
+
+/* ================= BOTONES & QUICK ACTIONS ================= */
+.quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.action-btn {
+  background: var(--bg-card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-button);
+  padding: 16px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  color: var(--text-muted); font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.action-btn:active { transform: scale(0.95); }
+.action-btn.active { background: var(--primary-gradient); color: white; border: none; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.4); }
+.action-btn svg { width: 24px; height: 24px; color: var(--primary-blue); }
+.action-btn.active svg { color: white; }
+
+.btn {
+  background: var(--primary-gradient); color: white; border: none; border-radius: var(--radius-button);
+  padding: 14px 24px; font-weight: 600; font-size: 0.95rem; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; transition: all 0.2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--danger-red); box-shadow: none; border: 1px solid rgba(255, 69, 58, 0.3); }
+.btn-sm { padding: 8px 16px; font-size: 0.75rem; width: auto; }
+
+/* ================= LISTAS Y TABLAS iOS ================= */
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.section-title { font-size: 1.25rem; font-weight: 700; }
+.section-link { font-size: 0.85rem; color: var(--primary-blue); text-decoration: none; font-weight: 600; }
+
+.order-item { padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; border: 1px solid rgba(255,255,255,0.05); }
+.order-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: rgba(10, 132, 255, 0.15); }
+.order-info { flex: 1; }
+.order-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+.order-subtitle { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+.order-amount { font-weight: 800; font-size: 1.1rem; }
+.text-green { color: var(--success-green); }
+
+.table-container { margin-top: 16px; overflow-x: auto; padding: 0; }
+.table-container table { width: 100%; border-collapse: collapse; min-width: 600px; }
+.table-container thead { background: rgba(0,0,0,0.2); }
+.table-container th { text-align: left; padding: 16px; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.table-container td { padding: 16px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 500; }
+.table-container tbody tr:last-child td { border-bottom: none; }
+
+.badge { padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; display: inline-block; letter-spacing: 0.2px; }
+.badge-pendiente { background: rgba(255, 214, 10, 0.15); color: var(--warning-yellow); }
+.badge-en_ruta { background: rgba(10, 132, 255, 0.15); color: var(--primary-blue); }
+.badge-completado { background: rgba(48, 209, 88, 0.15); color: var(--success-green); }
+
+/* ================= FORMULARIOS iOS ================= */
+.form-card { padding: 24px; margin-bottom: 24px; }
+.input-group { margin-bottom: 16px; }
+.input-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+.input {
+  width: 100%; padding: 16px; background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;
+  color: var(--text-main); font-size: 1rem; /* 1rem evita zoom automático en iOS */
+  transition: border-color 0.3s;
+}
+.input:focus { outline: none; border-color: var(--primary-blue); }
+
+/* ================= NOTIFICACIONES ================= */
+.notification-btn {
+  width: 44px; height: 44px; background: var(--bg-card); border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; backdrop-filter: blur(10px);
+}
+.notification-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; background: var(--danger-red); color: white; border-radius: 50%; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-app);
+}
+
+.notification-panel { position: fixed; top: 0; right: -100%; width: 100%; max-width: 380px; height: 100vh; z-index: 1000; transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); display: flex; flex-direction: column; border-radius: 0; border: none; border-left: 1px solid rgba(255,255,255,0.1); }
+.notification-panel.open { right: 0; }
+.notification-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s; }
+.notification-overlay.open { opacity: 1; visibility: visible; }
+.notification-header { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
+.notification-item { background: rgba(255,255,255,0.03); border-radius: 16px; padding: 16px; margin: 12px; cursor: pointer; border: 1px solid transparent; }
+.notification-item.unread { background: rgba(10, 132, 255, 0.1); border-color: rgba(10, 132, 255, 0.3); }
+
+/* ================= MENÚS AGRUPADOS (ACTION SHEETS iOS) ================= */
+.action-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1500; opacity: 0; visibility: hidden; transition: all 0.3s; }
+.action-sheet-overlay.active { opacity: 1; visibility: visible; }
+.action-sheet {
+  position: fixed; bottom: -100%; left: 0; right: 0; z-index: 1501;
+  background: rgba(20, 28, 50, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+  border-radius: 32px 32px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 20px));
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.1);
+  transition: bottom 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.action-sheet.active { bottom: 0; }
+.sheet-indicator { width: 40px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 0 auto 20px; }
+.sheet-title { text-align: center; font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: var(--text-main); }
+.sheet-grid { display: flex; flex-direction: column; gap: 12px; }
+.sheet-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 16px;
+  display: flex; align-items: center; gap: 16px; color: white; font-size: 1rem; font-weight: 600; text-align: left;
+  cursor: pointer; transition: background 0.2s; width: 100%;
+}
+.sheet-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.98); }
+.sheet-icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+
+/* ================= NAV INFERIOR AGRUPADA ================= */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(10, 15, 30, 0.75); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 15px));
+  border-top: 1px solid rgba(255,255,255,0.08); border-radius: 32px 32px 0 0;
+}
+.nav-item-group {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none;
+  color: var(--text-muted); font-size: 0.65rem; font-weight: 600; padding: 8px 16px; border-radius: 16px; transition: all 0.3s;
+}
+.nav-item-group.active { color: var(--primary-blue); }
+.nav-item-group svg { width: 24px; height: 24px; stroke-width: 2.5; transition: transform 0.2s; }
+.nav-item-group.active svg { transform: translateY(-2px); }
+
+/* Animaciones de vistas */
+.view { display: none; }
+.view.active { display: block; animation: fadeSlideIn 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 </style>
 </head>
 <body>
+
+<div class="bg-animated">
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+</div>
+
 <div class="main-scroll" id="mainScroll">
-<div id="view-dashboard" class="view active">
-<div class="header">
-<h1 class="greeting">Hola, Admin</h1>
-<button class="notification-btn" id="notificationBtn" onclick="toggleNotificationPanel()">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-<span class="notification-badge" id="notificationBadge" style="display:none">0</span>
-</button>
+  <div id="view-dashboard" class="view active">
+    <div class="header">
+      <h1 class="greeting">Hola, Admin</h1>
+      <button class="notification-btn" id="notificationBtn" onclick="toggleNotificationPanel()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notification-badge" id="notificationBadge" style="display:none">0</span>
+      </button>
+    </div>
+    
+    <div class="balance-card">
+      <div class="balance-label">Total Recaudado Hoy</div>
+      <div class="balance-amount" id="totalRecaudado">$0.00</div>
+      <div class="trend-row">
+        <span class="trend-badge" id="trendBadge">▲ 0%</span>
+      </div>
+    </div>
+    
+    <div class="quick-actions">
+      <button class="action-btn" id="btnPendientes"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pendientes</button>
+      <button class="action-btn" id="btnEnRuta"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>En Ruta</button>
+      <button class="action-btn" id="btnProductos"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>Productos</button>
+      <button class="action-btn" id="btnFinanzas"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Finanzas</button>
+    </div>
+    
+    <div class="section-header">
+      <h2 class="section-title">Últimos Pedidos</h2>
+      <a href="#" class="section-link" id="linkVerTodos">Ver Todos</a>
+    </div>
+    <div id="listaUltimosPedidos"></div>
+  </div>
+
+  <div id="view-pendientes" class="view"><h1 class="greeting" style="margin-bottom:20px">Pendientes</h1><div class="table-container" id="tablaPendientes"></div></div>
+  <div id="view-enruta" class="view"><h1 class="greeting" style="margin-bottom:20px">En Ruta</h1><div class="table-container" id="tablaEnRuta"></div></div>
+  <div id="view-completados" class="view"><h1 class="greeting" style="margin-bottom:20px">Completados</h1><div class="table-container" id="tablaCompletados"></div></div>
+  
+  <div id="view-finanzas" class="view">
+    <h1 class="greeting" style="margin-bottom:20px">Finanzas</h1>
+    <div class="balance-card" style="margin-bottom:16px"><div class="balance-label">Recaudado Hoy</div><div class="balance-amount" id="finanzasHoy">$0</div></div>
+    <div class="balance-card" style="margin-bottom:24px"><div class="balance-label">Recaudado Este Mes</div><div class="balance-amount" id="finanzasMes">$0</div></div>
+    <div class="section-header"><h2 class="section-title">Ventas de Hoy</h2></div>
+    <div class="table-container" id="tablaVentasHoy"></div>
+  </div>
+  
+  <div id="view-stock" class="view">
+    <h1 class="greeting" style="margin-bottom:20px">Stock</h1>
+    <div class="balance-card" style="margin-bottom:24px"><div class="balance-label">Litros Disponibles</div><div class="balance-amount" id="stockLitros">0 L</div></div>
+    <div class="form-card"><h3 style="margin-bottom:16px">Cargar Litros</h3><div class="input-group"><label class="input-label">Cantidad</label><input type="number" class="input" id="litros-agregar" placeholder="200" min="1"></div><button class="btn" id="btn-agregar-stock">Agregar Litros</button></div>
+    <div class="section-header"><h2 class="section-title">Disponibilidad</h2></div>
+    <div class="table-container" id="tabla-disponibilidad"></div>
+  </div>
+  
+  <div id="view-productos" class="view">
+    <h1 class="greeting" style="margin-bottom:20px">Inventario</h1>
+    <div class="form-card"><h3 style="margin-bottom:16px">Nuevo Producto</h3><div class="input-group"><label class="input-label">Nombre</label><input type="text" class="input" id="nombre-producto" placeholder="Ej: Bidón 20L"></div><div class="input-group"><label class="input-label">Precio ($)</label><input type="number" class="input" id="precio-producto" placeholder="5.00" step="0.01"></div><div class="input-group"><label class="input-label">Capacidad (litros)</label><input type="number" class="input" id="capacidad-producto" placeholder="20"></div><div class="input-group"><label class="input-label">URL Imagen</label><input type="text" class="input" id="imagen-producto" placeholder="https://..."></div><button class="btn" id="btn-agregar-producto">Crear Producto</button></div>
+    <div class="section-header"><h2 class="section-title">Existentes</h2></div>
+    <div class="table-container" id="tabla-productos"></div>
+  </div>
+  
+  <div id="view-choferes" class="view">
+    <h1 class="greeting" style="margin-bottom:20px">Repartidores</h1>
+    <div class="form-card"><h3 style="margin-bottom:16px">Alta Repartidor</h3><div class="input-group"><label class="input-label">Nombre</label><input type="text" class="input" id="chofer-nombre" placeholder="Nombre completo"></div><div class="input-group"><label class="input-label">Teléfono</label><input type="text" class="input" id="chofer-telefono" placeholder="Número de contacto"></div><div class="input-group"><label class="input-label">Vehículo</label><input type="text" class="input" id="chofer-vehiculo" placeholder="Ej: Moto"></div><button class="btn" id="btn-agregar-chofer">Registrar</button></div>
+    <div class="section-header"><h2 class="section-title">Plantilla</h2></div>
+    <div class="table-container" id="tabla-choferes"></div>
+  </div>
+  
+  <div id="view-configuracion" class="view">
+    <h1 class="greeting" style="margin-bottom:20px">Ajustes</h1>
+    <div class="form-card"><h3 style="margin-bottom:16px">Ubicación del Local</h3><div id="local-info" style="margin-bottom:20px;color:var(--text-muted);font-size:0.9rem;line-height:1.4;">Cargando...</div><button class="btn" id="btn-gps-local" style="margin-bottom:12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Actualizar GPS</button></div>
+  </div>
 </div>
-<div class="balance-card">
-<div class="balance-label">Total Recaudado Hoy</div>
-<div class="balance-amount" id="totalRecaudado">$0.00</div>
-<div class="trend-row">
-<span class="trend-badge" id="trendBadge">▲ 0%</span>
-<span class="trend-period">vs. Ayer</span>
-</div>
-</div>
-<div class="quick-actions">
-<button class="action-btn" id="btnPendientes"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pendientes</button>
-<button class="action-btn" id="btnEnRuta"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>En Ruta</button>
-<button class="action-btn" id="btnProductos"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>Productos</button>
-<button class="action-btn" id="btnFinanzas"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Finanzas</button>
-</div>
-<div class="section-header">
-<h2 class="section-title">Últimos Pedidos</h2>
-<a href="#" class="section-link" id="linkVerTodos">Ver Todos</a>
-</div>
-<div id="listaUltimosPedidos"></div>
-</div>
-<div id="view-pendientes" class="view"><h1 class="greeting" style="margin-bottom:20px">Pedidos Pendientes</h1><div class="table-container" id="tablaPendientes"></div></div>
-<div id="view-enruta" class="view"><h1 class="greeting" style="margin-bottom:20px">Pedidos en Ruta</h1><div class="table-container" id="tablaEnRuta"></div></div>
-<div id="view-completados" class="view"><h1 class="greeting" style="margin-bottom:20px">Pedidos Completados</h1><div class="table-container" id="tablaCompletados"></div></div>
-<div id="view-finanzas" class="view">
-<h1 class="greeting" style="margin-bottom:20px">Finanzas</h1>
-<div class="balance-card" style="margin-bottom:16px"><div class="balance-label">Recaudado Hoy</div><div class="balance-amount" id="finanzasHoy">$0</div></div>
-<div class="balance-card" style="margin-bottom:16px"><div class="balance-label">Recaudado Este Mes</div><div class="balance-amount" id="finanzasMes">$0</div></div>
-<div class="table-container"><h3 style="padding:16px;font-size:1rem">Ventas de Hoy</h3><div id="tablaVentasHoy"></div></div>
-</div>
-<div id="view-stock" class="view">
-<h1 class="greeting" style="margin-bottom:20px">Stock de Agua</h1>
-<div class="balance-card" style="margin-bottom:24px"><div class="balance-label">Litros Disponibles</div><div class="balance-amount" id="stockLitros">0 L</div></div>
-<div class="form-card"><h3 style="margin-bottom:16px">Cargar Litros al Stock</h3><div class="input-group"><label class="input-label">Cantidad de Litros</label><input type="number" class="input" id="litros-agregar" placeholder="200" min="1"></div><button class="btn" id="btn-agregar-stock">Agregar Litros</button></div>
-<div class="form-card"><h3 style="margin-bottom:16px">Disponibilidad de Productos</h3><div class="table-container" id="tabla-disponibilidad"></div></div>
-</div>
-<div id="view-productos" class="view">
-<h1 class="greeting" style="margin-bottom:20px">Inventario de Productos</h1>
-<div class="form-card"><h3 style="margin-bottom:16px">Agregar Producto</h3><div class="input-group"><label class="input-label">Nombre</label><input type="text" class="input" id="nombre-producto" placeholder="Ej: Bidón 20L"></div><div class="input-group"><label class="input-label">Precio ($)</label><input type="number" class="input" id="precio-producto" placeholder="5.00" step="0.01"></div><div class="input-group"><label class="input-label">Capacidad (litros)</label><input type="number" class="input" id="capacidad-producto" placeholder="20"></div><div class="input-group"><label class="input-label">URL de la Imagen</label><input type="text" class="input" id="imagen-producto" placeholder="https://ejemplo.com/imagen.jpg"></div><button class="btn" id="btn-agregar-producto">Agregar Producto</button></div>
-<div class="table-container"><h3 style="padding:16px;font-size:1rem">Productos Existentes</h3><div id="tabla-productos"></div></div>
-</div>
-<div id="view-choferes" class="view">
-<h1 class="greeting" style="margin-bottom:20px">Gestión de Repartidores</h1>
-<div class="form-card"><h3 style="margin-bottom:16px">Agregar Repartidor</h3><div class="input-group"><label class="input-label">Nombre</label><input type="text" class="input" id="chofer-nombre" placeholder="Nombre del repartidor"></div><div class="input-group"><label class="input-label">Teléfono</label><input type="text" class="input" id="chofer-telefono" placeholder="Número de contacto"></div><div class="input-group"><label class="input-label">Vehículo</label><input type="text" class="input" id="chofer-vehiculo" placeholder="Ej: Moto"></div><button class="btn" id="btn-agregar-chofer">Agregar Repartidor</button></div>
-<div class="table-container"><h3 style="padding:16px;font-size:1rem">Repartidores Registrados</h3><div id="tabla-choferes"></div></div>
-</div>
-<div id="view-configuracion" class="view">
-<h1 class="greeting" style="margin-bottom:20px">Configuración del Local</h1>
-<div class="form-card"><h3 style="margin-bottom:16px">Dirección para retiro</h3><div id="local-info" style="margin-bottom:16px;color:var(--text-muted)">Cargando...</div><button class="btn" id="btn-gps-local" style="margin-bottom:12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Obtener ubicación actual (GPS)</button><p style="font-size:.75rem;color:var(--text-muted)">Permití el acceso a la ubicación cuando el navegador lo solicite.</p></div>
-</div>
-</div>
+
 <div class="notification-overlay" id="notificationOverlay" onclick="toggleNotificationPanel()"></div>
 <div class="notification-panel" id="notificationPanel">
-<div class="notification-header"><h2>🔔 Notificaciones</h2><button class="btn-close" onclick="toggleNotificationPanel()">✕</button></div>
-<div class="notification-list" id="notificationList"></div>
-<div class="notification-footer"><button onclick="marcarTodasLeidas()">✓ Marcar leídas</button><button onclick="limpiarNotificaciones()">🗑 Limpiar</button></div>
+  <div class="notification-header"><h2>🔔 Notificaciones</h2><button class="btn-close" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer" onclick="toggleNotificationPanel()">✕</button></div>
+  <div class="notification-list" id="notificationList" style="flex:1;overflow-y:auto"></div>
+  <div style="padding:20px; border-top:1px solid rgba(255,255,255,0.05); display:flex; gap:10px;"><button class="btn btn-sm" style="flex:1" onclick="marcarTodasLeidas()">Leídas</button><button class="btn btn-sm btn-danger" style="flex:1" onclick="limpiarNotificaciones()">Limpiar</button></div>
 </div>
-<div class="toast-container" id="toastContainer"></div>
+
+<div class="toast-container" id="toastContainer" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:2000;"></div>
+
+<div class="action-sheet-overlay" id="sheetOverlay" onclick="closeAllMenus()"></div>
+
+<div class="action-sheet" id="sheet-pedidos">
+  <div class="sheet-indicator"></div><h3 class="sheet-title">Gestión de Pedidos</h3>
+  <div class="sheet-grid">
+    <button class="sheet-btn nav-item" data-view="pendientes">
+      <div class="sheet-icon-box" style="background:rgba(255,214,10,0.2);color:var(--warning-yellow);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      Pedidos Pendientes
+    </button>
+    <button class="sheet-btn nav-item" data-view="enruta">
+      <div class="sheet-icon-box" style="background:rgba(10,132,255,0.2);color:var(--primary-blue);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+      Pedidos en Ruta
+    </button>
+    <button class="sheet-btn nav-item" data-view="completados">
+      <div class="sheet-icon-box" style="background:rgba(48,209,88,0.2);color:var(--success-green);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      Pedidos Completados
+    </button>
+  </div>
+</div>
+
+<div class="action-sheet" id="sheet-inventario">
+  <div class="sheet-indicator"></div><h3 class="sheet-title">Almacén</h3>
+  <div class="sheet-grid">
+    <button class="sheet-btn nav-item" data-view="stock">
+      <div class="sheet-icon-box" style="background:rgba(10,132,255,0.2);color:var(--primary-blue);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+      Stock de Agua
+    </button>
+    <button class="sheet-btn nav-item" data-view="productos">
+      <div class="sheet-icon-box" style="background:rgba(10,132,255,0.2);color:var(--primary-blue);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg></div>
+      Gestor de Productos
+    </button>
+  </div>
+</div>
+
+<div class="action-sheet" id="sheet-ajustes">
+  <div class="sheet-indicator"></div><h3 class="sheet-title">Administración</h3>
+  <div class="sheet-grid">
+    <button class="sheet-btn nav-item" data-view="finanzas">
+      <div class="sheet-icon-box" style="background:rgba(48,209,88,0.2);color:var(--success-green);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      Finanzas
+    </button>
+    <button class="sheet-btn nav-item" data-view="choferes">
+      <div class="sheet-icon-box" style="background:rgba(10,132,255,0.2);color:var(--primary-blue);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div>
+      Gestión Repartidores
+    </button>
+    <button class="sheet-btn nav-item" data-view="configuracion">
+      <div class="sheet-icon-box" style="background:rgba(255,255,255,0.1);color:var(--text-main);"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      Configuración
+    </button>
+  </div>
+</div>
+
 <nav class="bottom-nav">
-<button class="nav-item active" data-view="dashboard"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg><span>Inicio</span></button>
-<button class="nav-item" data-view="pendientes"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Pend.</span></button>
-<button class="nav-item" data-view="enruta"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>Ruta</span></button>
-<button class="nav-item" data-view="completados"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Compl.</span></button>
-<button class="nav-item" data-view="finanzas"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg><span>Finanzas</span></button>
-<button class="nav-item" data-view="stock"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span>Stock</span></button>
-<button class="nav-item" data-view="productos"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg><span>Prod.</span></button>
-<button class="nav-item" data-view="choferes"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Choferes</span></button>
-<button class="nav-item" data-view="configuracion"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span>Config</span></button>
+  <button class="nav-item-group active" data-tab="dashboard" onclick="showView('dashboard')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+    <span>Inicio</span>
+  </button>
+  <button class="nav-item-group" data-tab="pedidos" onclick="openMenu('sheet-pedidos')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+    <span>Pedidos</span>
+  </button>
+  <button class="nav-item-group" data-tab="inventario" onclick="openMenu('sheet-inventario')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    <span>Almacén</span>
+  </button>
+  <button class="nav-item-group" data-tab="ajustes" onclick="openMenu('sheet-ajustes')">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    <span>Gestión</span>
+  </button>
 </nav>
+
 <script>
+// ========================================================
+// LA LÓGICA DE SUPABASE SE MANTIENE INTACTA
+// ========================================================
 const SUPABASE_URL="https://wzixsohxprcobfsmiksf.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6aXhzb2h4cHJjb2Jmc21pa3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg1MjUsImV4cCI6MjA5NzA0NDUyNX0.xBVJVEKVBoKjVzOt9TtrDtD1XkAMriq-de4yZdV9nHE";
 const headers={"apikey":SUPABASE_ANON_KEY,"Authorization":`Bearer ${SUPABASE_ANON_KEY}`,"Content-Type":"application/json"};
 const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let activeChannels=[];
+
+// ========== FUNCIONES DE UI iOS (NUEVO) ==========
+function openMenu(menuId) {
+  document.getElementById('sheetOverlay').classList.add('active');
+  document.getElementById(menuId).classList.add('active');
+}
+function closeAllMenus() {
+  document.getElementById('sheetOverlay').classList.remove('active');
+  document.querySelectorAll('.action-sheet').forEach(s => s.classList.remove('active'));
+}
 
 // ========== SISTEMA DE NOTIFICACIONES ==========
 let notificaciones=[];
@@ -201,20 +398,20 @@ let ultimoPedidoId=0;
 function toggleNotificationPanel(){
   const panel=document.getElementById('notificationPanel');
   const overlay=document.getElementById('notificationOverlay');
-  const isOpen=panel.classList.contains('open');
-  if(isOpen){panel.classList.remove('open');overlay.classList.remove('open');}
+  if(panel.classList.contains('open')){panel.classList.remove('open');overlay.classList.remove('open');}
   else{panel.classList.add('open');overlay.classList.add('open');renderNotificaciones();}
 }
 
 function renderNotificaciones(){
   const list=document.getElementById('notificationList');
-  if(notificaciones.length===0){
-    list.innerHTML='<div class="notification-empty"><div class="icon">🔔</div><div>No hay notificaciones</div></div>';
-    return;
-  }
+  if(notificaciones.length===0){ list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">No hay notificaciones</div>'; return;}
   list.innerHTML=notificaciones.slice().reverse().map(n=>{
     const leida=notificacionesLeidas.has(n.id);
-    return `<div class="notification-item ${leida?'':'unread'}" onclick="marcarLeida(${n.id});showView('pendientes');toggleNotificationPanel();"><div class="notif-title">${n.titulo}</div><div class="notif-body">${n.mensaje}</div><div class="notif-time">${n.hora}</div></div>`;
+    return `<div class="notification-item ${leida?'':'unread'}" onclick="marcarLeida(${n.id});showView('pendientes');toggleNotificationPanel();">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:4px">${n.titulo}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">${n.mensaje}</div>
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-top:6px;opacity:0.7">${n.hora}</div>
+    </div>`;
   }).join('');
 }
 
@@ -224,23 +421,13 @@ function limpiarNotificaciones(){notificaciones=[];notificacionesLeidas.clear();
 
 function actualizarBadge(){
   const badge=document.getElementById('notificationBadge');
-  const btn=document.getElementById('notificationBtn');
   const noLeidas=notificaciones.filter(n=>!notificacionesLeidas.has(n.id)).length;
-  if(noLeidas>0){
-    badge.textContent=noLeidas>99?'99+':noLeidas;
-    badge.style.display='flex';
-    badge.classList.add('bounce');
-    btn.classList.add('has-unread');
-    setTimeout(()=>badge.classList.remove('bounce'),500);
-  }else{
-    badge.style.display='none';
-    btn.classList.remove('has-unread');
-  }
+  if(noLeidas>0){badge.textContent=noLeidas>99?'99+':noLeidas;badge.style.display='flex';}
+  else{badge.style.display='none';}
 }
 
 function agregarNotificacion(titulo,mensaje,tipo='pedido'){
-  const id=Date.now();
-  const hora=new Date().toLocaleTimeString();
+  const id=Date.now(); const hora=new Date().toLocaleTimeString();
   notificaciones.push({id,titulo,mensaje,hora,tipo});
   if(notificaciones.length>50){const r=notificaciones.shift();notificacionesLeidas.delete(r.id);}
   actualizarBadge();
@@ -250,8 +437,8 @@ function agregarNotificacion(titulo,mensaje,tipo='pedido'){
 function mostrarToast(titulo,mensaje,icono='💧'){
   const container=document.getElementById('toastContainer');
   const toast=document.createElement('div');
-  toast.className='toast';
-  toast.innerHTML=`<div class="toast-icon">${icono}</div><div class="toast-content"><div class="toast-title">${titulo}</div><div class="toast-body">${mensaje}</div></div><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+  toast.style.cssText = 'background:var(--bg-card); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:16px; display:flex; align-items:center; gap:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5); pointer-events:auto; animation:fadeSlideIn 0.3s;';
+  toast.innerHTML=`<div style="font-size:1.5rem">${icono}</div><div style="flex:1"><div style="font-weight:700;font-size:0.9rem">${titulo}</div><div style="font-size:0.8rem;color:var(--text-muted)">${mensaje}</div></div>`;
   container.appendChild(toast);
   setTimeout(()=>{if(toast.parentElement)toast.remove();},5000);
 }
@@ -261,11 +448,9 @@ async function cargarNotificacionesIniciales(){
     const pedidos=await fetchSupabase(`pedidos?select=id,clientes(nombre),productos(nombre),monto,estado,fecha_pedido&estado=eq.pendiente&order=fecha_pedido.desc&limit=10`);
     if(pedidos.length>0){
       ultimoPedidoId=pedidos[0].id;
-      pedidos.forEach(p=>{
-        agregarNotificacion('📦 Pedido Pendiente',`${p.clientes?.nombre||'Cliente'} - ${p.productos?.nombre||'Producto'} ($${p.monto})`,'pedido');
-      });
+      pedidos.forEach(p=>agregarNotificacion('📦 Pedido Pendiente',`${p.clientes?.nombre||'Cliente'} - ${p.productos?.nombre||'Producto'} ($${p.monto})`,'pedido'));
     }
-  }catch(e){console.error('Error cargando notificaciones:',e);}
+  }catch(e){console.error('Error notificaciones:',e);}
 }
 
 function iniciarNotificacionesRealtime(){
@@ -282,11 +467,9 @@ function iniciarNotificacionesRealtime(){
 }
 
 function unsubscribeAll(){activeChannels.forEach(c=>supabaseClient.removeChannel(c));activeChannels=[];}
-
 async function fetchSupabase(endpoint,options={}){
   const res=await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`,{headers:{...headers,...options.headers},...options});
-  if(!res.ok)throw new Error(await res.text());
-  return res.json();
+  if(!res.ok)throw new Error(await res.text()); return res.json();
 }
 
 function hoyISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -294,7 +477,7 @@ function inicioMesISO(){const d=new Date();return `${d.getFullYear()}-${String(d
 
 function renderTable(containerId,columns,data,emptyMessage="No hay datos."){
   const container=document.getElementById(containerId);
-  if(!data||data.length===0){container.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📭</div>${emptyMessage}</div>`;return;}
+  if(!data||data.length===0){container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted)">${emptyMessage}</div>`;return;}
   let html=`<table><thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
   data.forEach(row=>{html+='<tr>';columns.forEach((_,i)=>{html+=`<td>${row[i]!==undefined?row[i]:'-'}</td>`;});html+='</tr>';});
   html+='</tbody></table>';
@@ -313,75 +496,69 @@ async function cargarDashboard(){
     const ventasHoyFiltradas=ventasHoy.filter(v=>{if(!v.fecha_completado)return false;return v.fecha_completado.split('T')[0]===fechaHoy;});
     const totalHoy=ventasHoyFiltradas.reduce((s,v)=>s+(parseFloat(v.monto_final)||0),0);
     document.getElementById('totalRecaudado').textContent=`$${totalHoy.toFixed(2)}`;
+    
     const ayer=new Date();ayer.setDate(ayer.getDate()-1);
     const ayerISO=`${ayer.getFullYear()}-${String(ayer.getMonth()+1).padStart(2,'0')}-${String(ayer.getDate()).padStart(2,'0')}`;
     const ventasAyer=ventasHoy.filter(v=>{if(!v.fecha_completado)return false;return v.fecha_completado.split('T')[0]===ayerISO;});
     const totalAyer=ventasAyer.reduce((s,v)=>s+(parseFloat(v.monto_final)||0),0);
     const diff=totalHoy-totalAyer;
     const pct=totalAyer?((diff/totalAyer)*100).toFixed(1):0;
+    
     const trendEl=document.getElementById('trendBadge');
-    if(diff>=0){trendEl.innerHTML=`▲ ${pct}%`;trendEl.style.background='rgba(34,197,94,0.15)';trendEl.style.color='#22C55E';}
-    else{trendEl.innerHTML=`▼ ${Math.abs(pct)}%`;trendEl.style.background='rgba(239,68,68,0.15)';trendEl.style.color='#EF4444';}
+    if(diff>=0){trendEl.innerHTML=`▲ ${pct}%`;trendEl.style.background='rgba(48,209,88,0.15)';trendEl.style.color='var(--success-green)';}
+    else{trendEl.innerHTML=`▼ ${Math.abs(pct)}%`;trendEl.style.background='rgba(255,69,58,0.15)';trendEl.style.color='var(--danger-red)';}
+    
     const ultimos=await fetchSupabase(`pedidos?select=id,clientes(nombre),productos(nombre),monto,fecha_pedido,estado&estado=eq.pendiente&order=fecha_pedido.desc&limit=5`);
     const container=document.getElementById('listaUltimosPedidos');
-    container.innerHTML=ultimos.length?ultimos.map(p=>`<div class="order-item"><div class="order-icon" style="background:rgba(45,104,255,0.2)">💧</div><div class="order-info"><div class="order-title">${p.productos?.nombre||'Pedido'} - ${p.clientes?.nombre||'Cliente'}</div><div class="order-subtitle">${p.estado} • ${new Date(p.fecha_pedido).toLocaleString()}</div></div><div class="order-amount text-green">$${p.monto}</div></div>`).join(''):'<p style="color:var(--text-muted);padding:16px">No hay pedidos pendientes.</p>';
-  }catch(e){console.error('Error cargando dashboard:',e);}
+    container.innerHTML=ultimos.length?ultimos.map(p=>`<div class="order-item"><div class="order-icon">💧</div><div class="order-info"><div class="order-title">${p.productos?.nombre||'Pedido'} - ${p.clientes?.nombre||'Cliente'}</div><div class="order-subtitle">${new Date(p.fecha_pedido).toLocaleString()}</div></div><div class="order-amount text-green">$${p.monto}</div></div>`).join(''):'<p style="color:var(--text-muted);padding:16px;text-align:center;">No hay pedidos pendientes.</p>';
+  }catch(e){console.error('Error dashboard:',e);}
 }
 
-// ========== PENDIENTES ==========
+// ========== VISTAS RESTANTES (Peticiones intactas) ==========
 async function cargarPendientes(){
   try{
     const pedidos=await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion,telefono),productos(nombre),monto,numero_recarga,estado,fecha_pedido,notas&estado=eq.pendiente&order=fecha_pedido.asc`);
     const data=pedidos.map(p=>[p.id,p.clientes?.nombre||'-',p.clientes?.direccion||'-',p.clientes?.telefono||'-',p.productos?.nombre||'-',`$${p.monto}`,p.numero_recarga||'-',`<span class="badge badge-pendiente">${p.estado}</span>`,p.notas||'-',new Date(p.fecha_pedido).toLocaleString()]);
     renderTable('tablaPendientes',['ID','Cliente','Dirección','Tel','Producto','Monto','Recarga','Estado','Notas','Fecha'],data,'No hay pedidos pendientes.');
-  }catch(e){console.error('Error cargando pendientes:',e);document.getElementById('tablaPendientes').innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error al cargar pedidos pendientes.</div>';}
+  }catch(e){console.error('Error:',e);}
 }
 
-// ========== EN RUTA ==========
 async function cargarEnRuta(){
   try{
     const pedidos=await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion),choferes(nombre),productos(nombre),monto,fecha_pedido,notas&estado=eq.en_ruta&order=fecha_pedido.asc`);
     const data=pedidos.map(p=>[p.id,p.clientes?.nombre||'-',p.clientes?.direccion||'-',p.choferes?.nombre||'Sin asignar',p.productos?.nombre||'-',`$${p.monto}`,`<span class="badge badge-en_ruta">en ruta</span>`,p.notas||'-',new Date(p.fecha_pedido).toLocaleString()]);
     renderTable('tablaEnRuta',['ID','Cliente','Dirección','Repartidor','Producto','Monto','Estado','Notas','Fecha'],data,'No hay pedidos en ruta.');
-  }catch(e){console.error('Error cargando en ruta:',e);document.getElementById('tablaEnRuta').innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error al cargar pedidos en ruta.</div>';}
+  }catch(e){console.error('Error:',e);}
 }
 
-// ========== COMPLETADOS ==========
 async function cargarCompletados(){
   try{
     const pedidos=await fetchSupabase(`pedidos?select=id,clientes(nombre,direccion),productos(nombre),monto,estado,fecha_entrega,notas&estado=eq.completado&order=fecha_entrega.desc&limit=20`);
     const data=pedidos.map(p=>[p.id,p.clientes?.nombre||'-',p.clientes?.direccion||'-',p.productos?.nombre||'-',`$${p.monto}`,`<span class="badge badge-completado">${p.estado}</span>`,p.notas||'-',p.fecha_entrega?new Date(p.fecha_entrega).toLocaleString():'-']);
-    renderTable('tablaCompletados',['ID','Cliente','Dirección','Producto','Monto','Estado','Notas','Entregado'],data,'No hay completados recientes.');
-  }catch(e){console.error('Error cargando completados:',e);document.getElementById('tablaCompletados').innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error al cargar pedidos completados.</div>';}
+    renderTable('tablaCompletados',['ID','Cliente','Dirección','Producto','Monto','Estado','Notas','Entregado'],data,'No hay completados.');
+  }catch(e){console.error('Error:',e);}
 }
 
-// ========== FINANZAS ==========
 async function cargarFinanzas(){
-  const fechaHoy=hoyISO();
-  const inicioMes=inicioMesISO();
+  const fechaHoy=hoyISO(); const inicioMes=inicioMesISO();
   try{
     const ventas=await fetchSupabase(`ventas?select=*,clientes(nombre)&order=fecha_completado.desc`);
     const ventasHoy=ventas.filter(v=>{if(!v.fecha_completado)return false;return v.fecha_completado.split('T')[0]===fechaHoy;});
     const ventasMes=ventas.filter(v=>{if(!v.fecha_completado)return false;return v.fecha_completado.split('T')[0]>=inicioMes;});
-    const totalHoy=ventasHoy.reduce((s,v)=>s+(parseFloat(v.monto_final)||0),0);
-    const totalMes=ventasMes.reduce((s,v)=>s+(parseFloat(v.monto_final)||0),0);
-    document.getElementById('finanzasHoy').textContent=`$${totalHoy.toFixed(2)}`;
-    document.getElementById('finanzasMes').textContent=`$${totalMes.toFixed(2)}`;
-    const data=ventasHoy.map((v,i)=>[i+1,v.clientes?.nombre||'Cliente #'+v.cliente_id,`$${v.monto_final}`,v.metodo_pago||'efectivo',new Date(v.fecha_completado).toLocaleString()]);
-    renderTable('tablaVentasHoy',['#','Cliente','Monto','Método','Hora'],data,'Sin ventas hoy.');
-  }catch(e){console.error('Error cargando finanzas:',e);document.getElementById('tablaVentasHoy').innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div>Error al cargar las finanzas.</div>';}
+    document.getElementById('finanzasHoy').textContent=`$${ventasHoy.reduce((s,v)=>s+(parseFloat(v.monto_final)||0),0).toFixed(2)}`;
+    document.getElementById('finanzasMes').textContent=`$${ventasMes.reduce((s,v)=>s+(parseFloat(v.monto_final)||0),0).toFixed(2)}`;
+    renderTable('tablaVentasHoy',['#','Cliente','Monto','Método','Hora'],ventasHoy.map((v,i)=>[i+1,v.clientes?.nombre||'Cliente #'+v.cliente_id,`$${v.monto_final}`,v.metodo_pago||'efectivo',new Date(v.fecha_completado).toLocaleString()]),'Sin ventas hoy.');
+  }catch(e){console.error('Error:',e);}
 }
 
-// ========== STOCK ==========
 async function cargarStock(){
   try{
     const stockRes=await fetchSupabase(`stock_agua?select=litros_disponibles&limit=1`);
     const litros=(Array.isArray(stockRes)&&stockRes.length>0)?(stockRes[0]?.litros_disponibles||0):0;
     document.getElementById('stockLitros').textContent=`${litros} L`;
     const productos=await fetchSupabase(`productos?select=nombre,capacidad_litros,precio&order=nombre.asc`);
-    const data=productos.map(p=>{const cant=p.capacidad_litros>0?Math.floor(litros/p.capacidad_litros):'N/A';return[p.nombre,`${p.capacidad_litros||'-'} L`,`$${p.precio}`,cant];});
-    renderTable('tabla-disponibilidad',['Producto','Litros/Und','Precio','Disponibles'],data,'No hay productos definidos.');
-  }catch(e){console.error('Error cargando stock:',e);}
+    renderTable('tabla-disponibilidad',['Producto','Litros/Und','Precio','Disp.'],productos.map(p=>[p.nombre,`${p.capacidad_litros||'-'} L`,`$${p.precio}`,p.capacidad_litros>0?Math.floor(litros/p.capacidad_litros):'N/A']),'No hay productos.');
+  }catch(e){console.error('Error:',e);}
 }
 
 async function agregarLitros(){
@@ -391,23 +568,17 @@ async function agregarLitros(){
     const stockActual=await fetchSupabase(`stock_agua?select=id,litros_disponibles&limit=1`);
     const stockRecord=(Array.isArray(stockActual)&&stockActual.length>0)?stockActual[0]:null;
     const nuevoTotal=(stockRecord?.litros_disponibles||0)+litrosAgregar;
-    if(stockRecord){
-      await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stockRecord.id}`,{method:'PATCH',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({litros_disponibles:nuevoTotal})});
-    }else{
-      await fetch(`${SUPABASE_URL}/rest/v1/stock_agua`,{method:'POST',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({litros_disponibles:litrosAgregar})});
-    }
-    document.getElementById('litros-agregar').value='';
-    cargarStock();
-  }catch(e){alert('Error al agregar litros: '+e.message);}
+    if(stockRecord) await fetch(`${SUPABASE_URL}/rest/v1/stock_agua?id=eq.${stockRecord.id}`,{method:'PATCH',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({litros_disponibles:nuevoTotal})});
+    else await fetch(`${SUPABASE_URL}/rest/v1/stock_agua`,{method:'POST',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({litros_disponibles:litrosAgregar})});
+    document.getElementById('litros-agregar').value=''; cargarStock();
+  }catch(e){alert('Error: '+e.message);}
 }
 
-// ========== PRODUCTOS ==========
 async function cargarProductos(){
   try{
     const productos=await fetchSupabase(`productos?select=*&order=id.asc`);
-    const data=productos.map(p=>[p.id,p.nombre,`$${p.precio}`,`${p.capacidad_litros||'-'} L`,p.imagen_url?`<img src="${p.imagen_url}" class="product-img" alt="${p.nombre}" onerror="this.style.display='none'">`:'-',`<button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id})">Eliminar</button>`]);
-    renderTable('tabla-productos',['ID','Nombre','Precio','Litros','Imagen','Acciones'],data,'No hay productos todavía.');
-  }catch(e){console.error('Error cargando productos:',e);}
+    renderTable('tabla-productos',['ID','Nombre','Precio','Litros','Acciones'],productos.map(p=>[p.id,p.nombre,`$${p.precio}`,`${p.capacidad_litros||'-'} L`,`<button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id})">Eliminar</button>`]),'No hay productos.');
+  }catch(e){console.error('Error:',e);}
 }
 
 async function agregarProducto(){
@@ -418,29 +589,22 @@ async function agregarProducto(){
   if(!nombre||isNaN(precio))return alert('Completá nombre y precio');
   try{
     await fetch(`${SUPABASE_URL}/rest/v1/productos`,{method:'POST',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({nombre,precio,capacidad_litros:capacidad,imagen_url})});
-    document.getElementById('nombre-producto').value='';
-    document.getElementById('precio-producto').value='';
-    document.getElementById('capacidad-producto').value='';
-    document.getElementById('imagen-producto').value='';
-    cargarProductos();
-    cargarStock();
+    document.querySelectorAll('#view-productos input').forEach(i=>i.value='');
+    cargarProductos(); cargarStock();
   }catch(e){alert('Error: '+e.message);}
 }
 
 window.eliminarProducto=async function(id){
   if(!confirm('¿Eliminar producto?'))return;
   await fetch(`${SUPABASE_URL}/rest/v1/productos?id=eq.${id}`,{method:'DELETE',headers});
-  cargarProductos();
-  cargarStock();
+  cargarProductos(); cargarStock();
 }
 
-// ========== CHOFERES ==========
 async function cargarChoferes(){
   try{
     const choferes=await fetchSupabase(`choferes?select=*&order=id.asc`);
-    const data=choferes.map(c=>[c.id,c.nombre,c.telefono,c.vehiculo||'-',c.activo?'✅':'❌',`<button class="btn btn-danger btn-sm" onclick="eliminarChofer(${c.id})">Eliminar</button>`]);
-    renderTable('tabla-choferes',['ID','Nombre','Teléfono','Vehículo','Activo','Acciones'],data,'No hay repartidores registrados.');
-  }catch(e){console.error('Error cargando choferes:',e);}
+    renderTable('tabla-choferes',['Nombre','Teléfono','Vehículo','Acciones'],choferes.map(c=>[c.nombre,c.telefono,c.vehiculo||'-',`<button class="btn btn-danger btn-sm" onclick="eliminarChofer(${c.id})">Eliminar</button>`]),'No hay repartidores.');
+  }catch(e){console.error('Error:',e);}
 }
 
 async function agregarChofer(){
@@ -450,71 +614,68 @@ async function agregarChofer(){
   if(!nombre||!telefono)return alert('Completá nombre y teléfono');
   try{
     await fetch(`${SUPABASE_URL}/rest/v1/choferes`,{method:'POST',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({nombre,telefono,vehiculo})});
-    document.getElementById('chofer-nombre').value='';
-    document.getElementById('chofer-telefono').value='';
-    document.getElementById('chofer-vehiculo').value='';
-    cargarChoferes();
+    document.querySelectorAll('#view-choferes input').forEach(i=>i.value=''); cargarChoferes();
   }catch(e){alert('Error: '+e.message);}
 }
 
 window.eliminarChofer=async function(id){
   if(!confirm('¿Eliminar repartidor?'))return;
-  await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${id}`,{method:'DELETE',headers});
-  cargarChoferes();
+  await fetch(`${SUPABASE_URL}/rest/v1/choferes?id=eq.${id}`,{method:'DELETE',headers}); cargarChoferes();
 }
 
-// ========== CONFIGURACIÓN LOCAL ==========
 async function cargarConfiguracionLocal(){
   try{
     const config=await fetchSupabase(`configuracion?select=*&id=eq.1`);
     const configRecord=(Array.isArray(config)&&config.length>0)?config[0]:null;
     const infoDiv=document.getElementById('local-info');
-    if(configRecord&&configRecord.direccion){infoDiv.innerHTML=`📍 <strong>${configRecord.direccion}</strong><br><small>Lat: ${configRecord.lat}, Lng: ${configRecord.lng}</small>`;}
-    else{infoDiv.innerHTML='⚠️ No se ha configurado la dirección del local. Usá el botón GPS.';}
-  }catch(e){console.error('Error cargando configuración:',e);}
-}
-
-async function guardarUbicacionLocal(lat,lng,direccion){
-  try{
-    await fetch(`${SUPABASE_URL}/rest/v1/configuracion?id=eq.1`,{method:'PATCH',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({direccion,lat,lng})});
-    cargarConfiguracionLocal();
-  }catch(e){console.error('Error guardando ubicación:',e);}
+    if(configRecord&&configRecord.direccion){infoDiv.innerHTML=`📍 <strong>${configRecord.direccion}</strong><br><br>Lat: ${configRecord.lat}<br>Lng: ${configRecord.lng}`;}
+  }catch(e){console.error('Error:',e);}
 }
 
 document.getElementById('btn-gps-local').addEventListener('click',()=>{
-  if(!navigator.geolocation){alert('Tu navegador no soporta geolocalización.');return;}
+  if(!navigator.geolocation){alert('Geolocalización no soportada.');return;}
   navigator.geolocation.getCurrentPosition(async(pos)=>{
     const lat=pos.coords.latitude;const lng=pos.coords.longitude;
-    try{const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);const data=await res.json();const direccion=data.display_name||'Dirección no encontrada';await guardarUbicacionLocal(lat,lng,direccion);alert('¡Ubicación del local guardada!');}
-    catch(e){await guardarUbicacionLocal(lat,lng,'Ubicación sin dirección');}
-  },(err)=>{alert('No se pudo obtener la ubicación. Permití el acceso al GPS.');});
+    try{
+      const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+      const data=await res.json();
+      await fetch(`${SUPABASE_URL}/rest/v1/configuracion?id=eq.1`,{method:'PATCH',headers:{...headers,'Prefer':'return=minimal'},body:JSON.stringify({direccion:data.display_name||'Sin dirección',lat,lng})});
+      alert('¡Ubicación guardada!'); cargarConfiguracionLocal();
+    }catch(e){alert('Error de conexión con el GPS');}
+  },()=>alert('No se pudo obtener ubicación.'));
 });
 
-// ========== NAVEGACIÓN ==========
+// ========== NAVEGACIÓN PRINCIPAL ==========
 function subscribeToView(viewId){
   unsubscribeAll();
   const map={'dashboard':['pedidos','ventas'],'pendientes':['pedidos'],'enruta':['pedidos'],'completados':['pedidos'],'finanzas':['ventas'],'stock':['stock_agua','productos'],'productos':['productos'],'choferes':['choferes']};
-  const tables=map[viewId]||[];
-  tables.forEach(table=>{
+  (map[viewId]||[]).forEach(table=>{
     const channel=supabaseClient.channel(`${viewId}-${table}-realtime`).on('postgres_changes',{event:'*',schema:'public',table:table},()=>{
-      if(viewId==='dashboard')cargarDashboard();
-      else if(viewId==='pendientes')cargarPendientes();
-      else if(viewId==='enruta')cargarEnRuta();
-      else if(viewId==='completados')cargarCompletados();
-      else if(viewId==='finanzas')cargarFinanzas();
-      else if(viewId==='stock')cargarStock();
-      else if(viewId==='productos')cargarProductos();
-      else if(viewId==='choferes')cargarChoferes();
+      if(viewId==='dashboard')cargarDashboard(); else if(viewId==='pendientes')cargarPendientes(); else if(viewId==='enruta')cargarEnRuta(); else if(viewId==='completados')cargarCompletados(); else if(viewId==='finanzas')cargarFinanzas(); else if(viewId==='stock')cargarStock(); else if(viewId==='productos')cargarProductos(); else if(viewId==='choferes')cargarChoferes();
     }).subscribe();
     activeChannels.push(channel);
   });
 }
 
 function showView(viewId){
+  // Manejo de la vista mostrada
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(`view-${viewId}`).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.querySelector(`.nav-item[data-view="${viewId}"]`)?.classList.add('active');
+  
+  // Cerramos menús Action Sheet
+  closeAllMenus();
+  
+  // Determinar la pestaña (tab) principal correcta según la vista interna
+  let activeTab = 'dashboard';
+  if (['pendientes', 'enruta', 'completados'].includes(viewId)) activeTab = 'pedidos';
+  if (['stock', 'productos'].includes(viewId)) activeTab = 'inventario';
+  if (['finanzas', 'choferes', 'configuracion'].includes(viewId)) activeTab = 'ajustes';
+  
+  document.querySelectorAll('.nav-item-group').forEach(n=>n.classList.remove('active'));
+  const activeTabElement = document.querySelector(`.nav-item-group[data-tab="${activeTab}"]`);
+  if(activeTabElement) activeTabElement.classList.add('active');
+
+  // Cargar datos
   if(viewId==='dashboard')cargarDashboard();
   else if(viewId==='pendientes')cargarPendientes();
   else if(viewId==='enruta')cargarEnRuta();
@@ -527,6 +688,7 @@ function showView(viewId){
   subscribeToView(viewId);
 }
 
+// Vinculación de eventos de los submenús manteniendo la lógica original .nav-item[data-view]
 document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{btn.addEventListener('click',(e)=>{e.preventDefault();showView(btn.dataset.view);});});
 document.getElementById('btnPendientes').addEventListener('click',()=>showView('pendientes'));
 document.getElementById('btnEnRuta').addEventListener('click',()=>showView('enruta'));
@@ -537,7 +699,7 @@ document.getElementById('btn-agregar-producto').addEventListener('click',agregar
 document.getElementById('btn-agregar-stock').addEventListener('click',agregarLitros);
 document.getElementById('btn-agregar-chofer').addEventListener('click',agregarChofer);
 
-// ========== INICIALIZACIÓN ==========
+// Inicialización
 cargarNotificacionesIniciales();
 iniciarNotificacionesRealtime();
 cargarDashboard();
